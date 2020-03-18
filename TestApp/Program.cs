@@ -8,9 +8,8 @@ namespace TestApp
     {
         static async Task Main(string[] args)
         {
-            var mre = new AsyncManualResetEvent(false);
-
-            await mre.WaitAsync();
+            Task t = Task.CompletedTask;
+            t.WaitAsync(default);
         }
     }
 }

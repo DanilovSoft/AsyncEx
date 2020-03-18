@@ -4,12 +4,13 @@
         <name>DanilovSoft.AsyncEx</name>
     </assembly>
     <members>
-        <member name="M:DanilovSoft.Threading.Tasks.TaskExtensions.WaitAsync(System.Threading.Tasks.Task,System.Threading.CancellationToken)">
+        <member name="M:System.Threading.Tasks.TaskExtensions.WaitAsync(System.Threading.Tasks.Task,System.Threading.CancellationToken)">
             <summary>
             Asynchronously waits for the task to complete, or for the cancellation token to be canceled.
             </summary>
             <param name="task">The task to wait for. May not be <c>null</c>.</param>
             <param name="cancellationToken">The cancellation token that cancels the wait.</param>
+            <exception cref="T:System.OperationCanceledException"/>
         </member>
     </members>
 </doc>

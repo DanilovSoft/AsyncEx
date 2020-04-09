@@ -11,5 +11,57 @@
             <param name="task">The task to wait for. May not be <c>null</c>.</param>
             <param name="cancellationToken">The cancellation token that cancels the wait.</param>
         </member>
+        <member name="T:DanilovSoft.AsyncEx.LazyAsync`1">
+            <summary>
+            Provides support for asynchronous lazy initialization. This type is fully threadsafe.
+            </summary>
+            <typeparam name="T">The type of object that is being asynchronously initialized.</typeparam>
+        </member>
+        <member name="F:DanilovSoft.AsyncEx.LazyAsync`1._lazy">
+            <summary>
+            The underlying lazy task.
+            </summary>
+        </member>
+        <member name="P:DanilovSoft.AsyncEx.LazyAsync`1.Value">
+            <summary>
+            Синхронно выполняет ожидание асинхронной операции.
+            </summary>
+        </member>
+        <member name="P:DanilovSoft.AsyncEx.LazyAsync`1.IsValueCreated">
+            <summary>
+            Потокобезопасно позволяет узнать было ли создано значение.
+            </summary>
+        </member>
+        <member name="P:DanilovSoft.AsyncEx.LazyAsync`1.IsStarted">
+            <summary>
+            Позволяет узнать была ли запущена асинхронная операция.
+            </summary>
+        </member>
+        <member name="P:DanilovSoft.AsyncEx.LazyAsync`1.ValueForDebugDisplay">
+            <summary>
+            Gets the value of the LazyAsync&lt;T&gt; for debugging display purposes.
+            </summary>
+        </member>
+        <member name="P:DanilovSoft.AsyncEx.LazyAsync`1.IsValueFaulted">
+            <summary>
+            Gets whether the value creation is faulted or not.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.LazyAsync`1.#ctor(System.Func{System.Threading.Tasks.Task{`0}})">
+            <summary>
+            Initializes a new instance of the <see cref="!:AsyncLazy&lt;T&gt;"/> class.
+            </summary>
+            <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.LazyAsync`1.Start">
+            <summary>
+            Starts the asynchronous initialization, if it has not already started.
+            </summary>
+        </member>
+        <member name="T:DanilovSoft.AsyncEx.LazyAsync`1.System_LazyDebugView">
+            <summary>A debugger view of the LazyAsync&lt;T&gt; to surface additional debugging properties and 
+            to ensure that the LazyAsync&lt;T&gt; does not become initialized if it was not already.
+            </summary>
+        </member>
     </members>
 </doc>

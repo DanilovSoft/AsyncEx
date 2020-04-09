@@ -4,25 +4,21 @@
     <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks>
     <AssemblyName>DanilovSoft.AsyncEx</AssemblyName>
     <RootNamespace>DanilovSoft.AsyncEx</RootNamespace>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>AsyncEx.pfx</AssemblyOriginatorKeyFile>
+    <SignAssembly>false</SignAssembly>
+    <AssemblyOriginatorKeyFile>DanilovSoft.AsyncEx.pfx</AssemblyOriginatorKeyFile>
     <Configurations>Debug;Release;Debug-Work</Configurations>
-    <Authors>Vitalii Danilov</Authors>
-    <Product />
+    <Version>1.1.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Vitalii Danilov</Authors>
   </PropertyGroup>
 
   <PropertyGroup>
-    <DocumentationFile>..\DanilovSoft.AsyncEx.xml</DocumentationFile>
-    <Version>1.0.2</Version>
+    <DocumentationFile>DanilovSoft.AsyncEx.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\.editorconfig" Link=".editorconfig" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
   </ItemGroup>
 
 </Project>

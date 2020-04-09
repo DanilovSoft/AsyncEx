@@ -2,17 +2,18 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace System.Threading.Tasks
+namespace DanilovSoft.Threading.Tasks
 {
-    public static class TaskExtensions
+    internal static class TaskExtensions
     {
         /// <summary>
         /// Asynchronously waits for the task to complete, or for the cancellation token to be canceled.
         /// </summary>
         /// <param name="task">The task to wait for. May not be <c>null</c>.</param>
         /// <param name="cancellationToken">The cancellation token that cancels the wait.</param>
-        /// <exception cref="OperationCanceledException"/>
         public static Task WaitAsync(this Task task, CancellationToken cancellationToken)
         {
             if (cancellationToken.CanBeCanceled)

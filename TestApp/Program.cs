@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using DanilovSoft.AsyncEx;
 
 namespace TestApp
 {
@@ -8,8 +9,10 @@ namespace TestApp
     {
         static async Task Main(string[] args)
         {
-            Task t = Task.CompletedTask;
-            t.WaitAsync(default);
+            var lazy = new LazyAsync<int>(async () => { await Task.Delay(2000); throw new OperationCanceledException(); });
+            lazy.Start();
+
+            var v = lazy.Value;
         }
     }
 }

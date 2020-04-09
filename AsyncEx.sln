@@ -5,14 +5,9 @@ VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsyncEx", "AsyncEx\AsyncEx.csproj", "{20D06CF1-B15D-47AD-8061-A53B75D76783}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestApp", "TestApp\TestApp.csproj", "{9B330D28-63DA-4F7E-94A7-278DFCE64BBE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{9B330D28-63DA-4F7E-94A7-278DFCE64BBE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XUnitTests", "XUnitTests\XUnitTests.csproj", "{06905C68-8714-4BB6-B777-F608B0D52053}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3253FBEF-8A38-4B12-9235-4D76591F3460}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnitTests", "XUnitTests\XUnitTests.csproj", "{06905C68-8714-4BB6-B777-F608B0D52053}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

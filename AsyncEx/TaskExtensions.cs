@@ -14,6 +14,7 @@ namespace DanilovSoft.Threading.Tasks
         /// </summary>
         /// <param name="task">The task to wait for. May not be <c>null</c>.</param>
         /// <param name="cancellationToken">The cancellation token that cancels the wait.</param>
+        /// <exception cref="OperationCanceledException"/>
         public static Task WaitAsync(this Task task, CancellationToken cancellationToken)
         {
             if (cancellationToken.CanBeCanceled)
@@ -33,27 +34,42 @@ namespace DanilovSoft.Threading.Tasks
             }
         }
 
-#if NETSTANDARD2_0
+        /// <exception cref="OperationCanceledException"/>
         private static async Task DoWaitAsync(Task task, CancellationToken cancellationToken)
         {
-            using (var cancelTaskSource = new CancellationTokenTaskSource(cancellationToken))
+            if (await Task.WhenAny(task, Task.Delay(Timeout.Infinite, cancellationToken)).ConfigureAwait(false) == task)
             {
-                await Task.WhenAny(task, cancelTaskSource.Task).Unwrap().ConfigureAwait(false);
+                return;
+            }
+            else
+            // Завершился Delay из-за токена отмены.
+            {
+                cancellationToken.ThrowIfCancellationRequested();
             }
         }
-#else
-        private static async Task DoWaitAsync(Task task, CancellationToken cancellationToken)
-        {
-            var cancelTaskSource = new CancellationTokenTaskSource(cancellationToken);
-            try
-            {
-                await Task.WhenAny(task, cancelTaskSource.Task).Unwrap().ConfigureAwait(false);
-            }
-            finally
-            {
-                await cancelTaskSource.DisposeAsync().ConfigureAwait(false);
-            }
-        }
-#endif
+
+//#if NETSTANDARD2_0
+//        private static async Task DoWaitAsync(Task task, CancellationToken cancellationToken)
+//        {
+//            using (var cancelTaskSource = new CancellationTokenTaskSource(cancellationToken))
+//            {
+//                await Task.WhenAny(task, cancelTaskSource.Task).Unwrap().ConfigureAwait(false);
+//            }
+//        }
+//#else
+//        /// <exception cref="OperationCanceledException"/>
+//        private static async Task DoWaitAsync(Task task, CancellationToken cancellationToken)
+//        {
+//            var cancelTaskSource = new CancellationTokenTaskSource(cancellationToken);
+//            try
+//            {
+//                await Task.WhenAny(task, cancelTaskSource.Task).Unwrap().ConfigureAwait(false);
+//            }
+//            finally
+//            {
+//                await cancelTaskSource.DisposeAsync().ConfigureAwait(false);
+//            }
+//        }
+//#endif
     }
 }

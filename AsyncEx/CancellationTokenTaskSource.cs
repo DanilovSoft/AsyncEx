@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,9 +31,10 @@ namespace DanilovSoft.Threading
 #endif
         }
 
-        private static void OnCanceled(object state)
+        private static void OnCanceled(object? state)
         {
             var self = state as CancellationTokenTaskSource;
+            Debug.Assert(self != null);
             self._tcs.TrySetCanceled(self._cancellationToken);
         }
 

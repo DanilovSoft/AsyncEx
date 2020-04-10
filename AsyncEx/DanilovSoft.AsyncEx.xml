@@ -10,6 +10,10 @@
             </summary>
             <param name="task">The task to wait for. May not be <c>null</c>.</param>
             <param name="cancellationToken">The cancellation token that cancels the wait.</param>
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.Threading.Tasks.TaskExtensions.DoWaitAsync(System.Threading.Tasks.Task,System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
         </member>
         <member name="T:DanilovSoft.AsyncEx.LazyAsync`1">
             <summary>

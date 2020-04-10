@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -55,6 +56,9 @@ namespace DanilovSoft.AsyncEx
         /// <summary>
         /// Gets the value of the <see cref="LazyAsync{T}"/> for debugging display purposes.
         /// </summary>
+#if NullableRef
+        [MaybeNull]
+#endif
         private T ValueForDebugDisplay
         {
             get
@@ -218,6 +222,9 @@ namespace DanilovSoft.AsyncEx
             public bool IsStarted => _self.IsStarted;
             //public bool IsCompleted => _self.IsCompleted;
             public bool IsValueCreated => _self.IsValueCreated;
+#if NullableRef
+            [MaybeNull]
+#endif
             public T Value => _self.ValueForDebugDisplay;
             //public bool IsCanceled => _self.IsCanceled;
             public bool IsValueFaulted => _self.IsValueFaulted;

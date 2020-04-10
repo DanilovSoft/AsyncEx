@@ -54,5 +54,28 @@ namespace XUnitTests
 
             mre.Reset();
         }
+
+        [Fact]
+        public async Task TestMreCancel()
+        {
+            var mre = new AsyncManualResetEvent(false);
+
+            var cts = new CancellationTokenSource(2000);
+            //_ = Task.Delay(2000).ContinueWith(_ => { mre.Set(); });
+
+            ValueTask task = mre.WaitAsync(cts.Token);
+
+            try
+            {
+                await task;
+            }
+            catch (OperationCanceledException)
+            {
+                Assert.True(task.IsCanceled);
+            }
+            
+
+            mre.Reset();
+        }
     }
 }

@@ -5,26 +5,26 @@ using System.Threading.Tasks;
 
 namespace System.Threading
 {
-    public sealed class AsyncCountdownEvent
-    {
-        public AsyncCountdownEvent(int initialCount)
-        {
+    //public sealed class AsyncCountdownEvent
+    //{
+    //    public AsyncCountdownEvent(int initialCount)
+    //    {
             
-        }
+    //    }
 
-        public void Signal()
-        {
+    //    public void Signal()
+    //    {
 
-        }
+    //    }
 
-        public void AddCount()
-        {
+    //    public void AddCount()
+    //    {
 
-        }
+    //    }
 
-        public async Task WaitAsync()
-        {
+    //    public async Task WaitAsync()
+    //    {
 
-        }
-    }
+    //    }
+    //}
 }

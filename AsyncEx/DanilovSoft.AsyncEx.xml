@@ -24,12 +24,12 @@
         </member>
         <member name="P:DanilovSoft.AsyncEx.LazyAsync`1.Value">
             <summary>
-            Синхронно выполняет ожидание асинхронной операции.
+             Gets the lazily initialized value of the current <see cref="T:DanilovSoft.AsyncEx.LazyAsync`1"/> instance.
             </summary>
         </member>
         <member name="P:DanilovSoft.AsyncEx.LazyAsync`1.IsValueCreated">
             <summary>
-            Потокобезопасно позволяет узнать было ли создано значение.
+             Gets a value that indicates whether a value has been created for this <see cref="T:DanilovSoft.AsyncEx.LazyAsync`1"/> instance.
             </summary>
         </member>
         <member name="P:DanilovSoft.AsyncEx.LazyAsync`1.IsStarted">
@@ -39,7 +39,7 @@
         </member>
         <member name="P:DanilovSoft.AsyncEx.LazyAsync`1.ValueForDebugDisplay">
             <summary>
-            Gets the value of the LazyAsync&lt;T&gt; for debugging display purposes.
+            Gets the value of the <see cref="T:DanilovSoft.AsyncEx.LazyAsync`1"/> for debugging display purposes.
             </summary>
         </member>
         <member name="P:DanilovSoft.AsyncEx.LazyAsync`1.IsValueFaulted">
@@ -49,9 +49,14 @@
         </member>
         <member name="M:DanilovSoft.AsyncEx.LazyAsync`1.#ctor(System.Func{System.Threading.Tasks.Task{`0}})">
             <summary>
-            Initializes a new instance of the <see cref="!:AsyncLazy&lt;T&gt;"/> class.
+            Initializes a new instance of the <see cref="T:DanilovSoft.AsyncEx.LazyAsync`1"/> class.
             </summary>
             <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.LazyAsync`1.GetValueAsync">
+            <summary>
+             Gets the lazily initialized value of the current <see cref="T:DanilovSoft.AsyncEx.LazyAsync`1"/> instance.
+            </summary>
         </member>
         <member name="M:DanilovSoft.AsyncEx.LazyAsync`1.Start">
             <summary>
@@ -59,8 +64,8 @@
             </summary>
         </member>
         <member name="T:DanilovSoft.AsyncEx.LazyAsync`1.System_LazyDebugView">
-            <summary>A debugger view of the LazyAsync&lt;T&gt; to surface additional debugging properties and 
-            to ensure that the LazyAsync&lt;T&gt; does not become initialized if it was not already.
+            <summary>A debugger view of the <see cref="T:DanilovSoft.AsyncEx.LazyAsync`1"/> to surface additional debugging properties and 
+            to ensure that the <see cref="T:DanilovSoft.AsyncEx.LazyAsync`1"/> does not become initialized if it was not already.
             </summary>
         </member>
     </members>

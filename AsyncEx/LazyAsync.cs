@@ -22,13 +22,17 @@ namespace DanilovSoft.AsyncEx
         private readonly Lazy<Task<T>> _lazy;
 
         /// <summary>
-        /// Синхронно выполняет ожидание асинхронной операции.
+        ///  Gets the lazily initialized value of the current <see cref="LazyAsync{T}"/> instance.
         /// </summary>
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public T Value => _lazy.Value.GetAwaiter().GetResult();
+        public T Value
+        {
+            [DebuggerStepThrough]
+            get => _lazy.Value.GetAwaiter().GetResult();
+        }
 
         /// <summary>
-        /// Потокобезопасно позволяет узнать было ли создано значение.
+        ///  Gets a value that indicates whether a value has been created for this <see cref="LazyAsync{T}"/> instance.
         /// </summary>
         public bool IsValueCreated
         {
@@ -46,10 +50,10 @@ namespace DanilovSoft.AsyncEx
         /// <summary>
         /// Позволяет узнать была ли запущена асинхронная операция.
         /// </summary>
-        public bool IsStarted => _lazy.IsValueCreated;
+        private bool IsStarted => _lazy.IsValueCreated;
 
         /// <summary>
-        /// Gets the value of the LazyAsync&lt;T&gt; for debugging display purposes.
+        /// Gets the value of the <see cref="LazyAsync{T}"/> for debugging display purposes.
         /// </summary>
         private T ValueForDebugDisplay
         {
@@ -72,7 +76,7 @@ namespace DanilovSoft.AsyncEx
         /// <summary>
         /// Gets whether the value creation is faulted or not.
         /// </summary>
-        public bool IsValueFaulted
+        private bool IsValueFaulted
         {
             get 
             {
@@ -80,42 +84,42 @@ namespace DanilovSoft.AsyncEx
                 // Таск уже создан.
                 {
                     Task<T> task = _lazy.Value;
-                    return task.IsFaulted;
+                    return task.IsFaulted || task.IsCanceled;
                 }
                 return false;
             }
         }
 
-        public bool IsCanceled
-        {
-            get
-            {
-                if (_lazy.IsValueCreated)
-                // Таск уже создан.
-                {
-                    Task<T> task = _lazy.Value;
-                    return task.IsCanceled;
-                }
-                return false;
-            }
-        }
+        //private bool IsCanceled
+        //{
+        //    get
+        //    {
+        //        if (_lazy.IsValueCreated)
+        //        // Таск уже создан.
+        //        {
+        //            Task<T> task = _lazy.Value;
+        //            return task.IsCanceled;
+        //        }
+        //        return false;
+        //    }
+        //}
 
-        public bool IsCompleted
-        {
-            get
-            {
-                if (_lazy.IsValueCreated)
-                // Таск уже создан.
-                {
-                    Task<T> task = _lazy.Value;
-                    return task.IsCompleted;
-                }
-                return false;
-            }
-        }
+        //private bool IsCompleted
+        //{
+        //    get
+        //    {
+        //        if (_lazy.IsValueCreated)
+        //        // Таск уже создан.
+        //        {
+        //            Task<T> task = _lazy.Value;
+        //            return task.IsCompleted;
+        //        }
+        //        return false;
+        //    }
+        //}
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AsyncLazy&lt;T&gt;"/> class.
+        /// Initializes a new instance of the <see cref="LazyAsync{T}"/> class.
         /// </summary>
         /// <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
         public LazyAsync(Func<Task<T>> valueFactory)
@@ -124,6 +128,9 @@ namespace DanilovSoft.AsyncEx
             _lazy = new Lazy<Task<T>>(valueFactory: valueFactory, LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
+        /// <summary>
+        ///  Gets the lazily initialized value of the current <see cref="LazyAsync{T}"/> instance.
+        /// </summary>
         public ValueTask<T> GetValueAsync()
         {
             // Тригерим запуск асинхронной операции.
@@ -140,52 +147,52 @@ namespace DanilovSoft.AsyncEx
             }
         }
 
-        public bool GetValueOrStart(out T value)
-        {
-            // Тригерим запуск асинхронной операции.
-            Task<T> task = _lazy.Value;
+        //public bool GetValueOrStart(out T value)
+        //{
+        //    // Тригерим запуск асинхронной операции.
+        //    Task<T> task = _lazy.Value;
 
-            if (task.IsCompleted)
-            // Таск завершен (не факт что успешно).
-            {
-                // Может быть исключение.
-                value = task.GetAwaiter().GetResult();
-                return true;
-            }
-            else
-            {
-                value = default;
-                return false;
-            }
-        }
+        //    if (task.IsCompleted)
+        //    // Таск завершен (не факт что успешно).
+        //    {
+        //        // Может быть исключение.
+        //        value = task.GetAwaiter().GetResult();
+        //        return true;
+        //    }
+        //    else
+        //    {
+        //        value = default;
+        //        return false;
+        //    }
+        //}
 
-        public bool TryGetValue(out T value)
-        {
-            if (_lazy.IsValueCreated)
-            // Таск уже запущен.
-            {
-                Task<T> task = _lazy.Value;
+        //public bool TryGetValue(out T value)
+        //{
+        //    if (_lazy.IsValueCreated)
+        //    // Таск уже создан.
+        //    {
+        //        Task<T> task = _lazy.Value;
 
-                if (task.IsCompleted)
-                // Таск завершен (не факт что успешно).
-                {
-                    // Может быть исключение.
-                    value = task.GetAwaiter().GetResult();
-                    return true;
-                }
-                else
-                {
-                    value = default;
-                    return false;
-                }
-            }
-            else
-            // Таск ещё не запущен.
-            {
-                value = default;
-                return false;
-            }
-        }
+        //        if (task.IsCompleted)
+        //        // Таск завершен (не факт что успешно).
+        //        {
+        //            // Может быть исключение.
+        //            value = task.GetAwaiter().GetResult();
+        //            return true;
+        //        }
+        //        else
+        //        {
+        //            value = default;
+        //            return false;
+        //        }
+        //    }
+        //    else
+        //    // Таск ещё не запущен.
+        //    {
+        //        value = default;
+        //        return false;
+        //    }
+        //}
 
         /// <summary>
         /// Starts the asynchronous initialization, if it has not already started.
@@ -196,8 +203,8 @@ namespace DanilovSoft.AsyncEx
             _ = _lazy.Value;
         }
 
-        /// <summary>A debugger view of the LazyAsync&lt;T&gt; to surface additional debugging properties and 
-        /// to ensure that the LazyAsync&lt;T&gt; does not become initialized if it was not already.
+        /// <summary>A debugger view of the <see cref="LazyAsync{T}"/> to surface additional debugging properties and 
+        /// to ensure that the <see cref="LazyAsync{T}"/> does not become initialized if it was not already.
         /// </summary>
         private sealed class System_LazyDebugView
         {
@@ -209,10 +216,10 @@ namespace DanilovSoft.AsyncEx
             }
 
             public bool IsStarted => _self.IsStarted;
-            public bool IsCompleted => _self.IsCompleted;
+            //public bool IsCompleted => _self.IsCompleted;
             public bool IsValueCreated => _self.IsValueCreated;
             public T Value => _self.ValueForDebugDisplay;
-            public bool IsCanceled => _self.IsCanceled;
+            //public bool IsCanceled => _self.IsCanceled;
             public bool IsValueFaulted => _self.IsValueFaulted;
         }
     }

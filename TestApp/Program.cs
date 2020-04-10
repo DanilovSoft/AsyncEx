@@ -12,7 +12,9 @@ namespace TestApp
             var lazy = new LazyAsync<int>(async () => { await Task.Delay(2000); throw new OperationCanceledException(); });
             lazy.Start();
 
-            var v = lazy.Value;
+            Thread.Sleep(3000);
+
+            var v = await lazy.GetValueAsync();
         }
     }
 }

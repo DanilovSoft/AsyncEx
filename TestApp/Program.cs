@@ -8,7 +8,7 @@ namespace TestApp
 {
     class Program
     {
-        static async Task Main()
+        static async Task Main2()
         {
             using var scheduller = new CustomPriorityTaskScheduller(2, ThreadPriority.Lowest);
 

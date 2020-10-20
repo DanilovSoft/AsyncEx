@@ -10,11 +10,11 @@ namespace TestApp
     {
         static async Task Main2()
         {
-            using var scheduller = new CustomPriorityTaskScheduller(2, ThreadPriority.Lowest);
+            var scheduller = new PrioritizedTaskScheduler(ThreadPriority.Lowest);
 
             var actionBlock = new ActionBlock<int>(async x => 
             {
-                await Task.Delay(2000);
+                await Task.Delay(2000).ConfigureAwait(false);
 
                 Console.WriteLine(x + " Thread: " + Thread.CurrentThread.Name);
 

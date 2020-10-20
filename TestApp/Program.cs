@@ -8,33 +8,50 @@ namespace TestApp
 {
     class Program
     {
-        static async Task Main2()
+        static readonly ManualResetEventSource<string> _mcs1 = new ManualResetEventSource<string>();
+        static readonly ManualResetEventSource<string> _mcs2 = new ManualResetEventSource<string>();
+
+        static void Main()
         {
-            var scheduller = new PrioritizedTaskScheduler(ThreadPriority.Lowest);
+            new Thread(Thread1).Start();
+            new Thread(Thread2).Start();
+            MainThread();
+        }
 
-            var actionBlock = new ActionBlock<int>(async x => 
+        static void MainThread()
+        {
+            while (true)
             {
-                await Task.Delay(2000).ConfigureAwait(false);
+                Thread.Sleep(3_000);
 
-                Console.WriteLine(x + " Thread: " + Thread.CurrentThread.Name);
+                _mcs1.Reset();
+                _mcs2.Reset();
 
-            }, new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = 10, BoundedCapacity = -1, TaskScheduler = scheduller });
+                _mcs1.Wait(timeout: TimeSpan.FromSeconds(5), out string? value1);
+                _mcs2.Wait(timeout: TimeSpan.FromSeconds(5), out string? value2);
+            }
+        }
 
-            actionBlock.Post(0);
-            actionBlock.Post(1);
-            actionBlock.Post(2);
-            actionBlock.Post(3);
-            actionBlock.Post(4);
-            actionBlock.Post(5);
-            actionBlock.Post(6);
-            actionBlock.Post(7);
-            actionBlock.Post(8);
-            actionBlock.Post(9);
-            actionBlock.Post(10);
-            actionBlock.Post(11);
-            actionBlock.Post(12);
+        static void Thread1()
+        {
+            while (true)
+            {
+                Thread.Sleep(1_000);
+                string value = new Random().Next().ToString();
 
-            await actionBlock.Completion;
+                _mcs1.TrySet(value);
+            }
+        }
+
+        static void Thread2()
+        {
+            while (true)
+            {
+                Thread.Sleep(1_000);
+                string value = new Random().Next().ToString();
+
+                _mcs2.TrySet(value);
+            }
         }
     }
 }

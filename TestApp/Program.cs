@@ -27,7 +27,10 @@ namespace TestApp
                 _mcs1.Reset();
                 _mcs2.Reset();
 
-                _mcs1.Wait(timeout: TimeSpan.FromSeconds(5), out string? value1);
+                if (_mcs1.Wait(timeout: TimeSpan.FromSeconds(5), out string? value1))
+                {
+                    // Передаёшь value1 в конвейер.
+                }
                 _mcs2.Wait(timeout: TimeSpan.FromSeconds(5), out string? value2);
             }
         }

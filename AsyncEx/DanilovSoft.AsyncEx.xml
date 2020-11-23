@@ -148,6 +148,79 @@
                 If the method returns this value, the associated parameter will not be <see langword="null"/>.
             </param>
         </member>
+        <member name="F:DanilovSoft.AsyncEx.AsyncLock._queue">
+            <summary>
+            Очередь пользовательских тасков, которые хотят получить блокировку.
+            </summary>
+            <remarks>Доступ через блокировку <see cref="F:DanilovSoft.AsyncEx.AsyncLock._syncObj"/></remarks>
+        </member>
+        <member name="F:DanilovSoft.AsyncEx.AsyncLock._releaseTaskToken">
+            <summary>
+            Токен для потока у которого есть право освободить блокировку.
+            Может только увеличиваться.
+            </summary>
+            <remarks>Превентивная защита от освобождения блокировки чужим потоком.</remarks>
+        </member>
+        <member name="F:DanilovSoft.AsyncEx.AsyncLock._taken">
+            <summary>
+            Когда блокировка захвачена таском.
+            </summary>
+            <remarks>Модификация через блокировку <see cref="F:DanilovSoft.AsyncEx.AsyncLock._syncObj"/> или атомарно.</remarks>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncLock.LockAsync(System.Func{System.Threading.Tasks.Task})">
+            <summary>
+            Выполняет блокировку задачи (Task), все задачи запущенные через LockAsync будут выполнятся последовательно
+            </summary>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncLock.LockAsync(System.Action)">
+            <summary>
+            Action будет разделять блоировку совместно с задачами (Task) запущеными через LockAsync и будет выполнятся последовательно 
+            </summary>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncLock.LockAsync">
+            <summary>
+            Блокирует выполнение до тех пор пока не будет захвачена блокировка
+            предоставляющая эксклюзивный доступ к текущему экземпляру <see cref="T:DanilovSoft.AsyncEx.AsyncLock"/>.
+            Освобождение блокировки производится вызовом <see cref="M:DanilovSoft.AsyncEx.LockReleaser.Dispose"/>.
+            </summary>
+            <returns>Ресурс удерживающий блокировку.</returns>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncLock.ReleaseLock(DanilovSoft.AsyncEx.LockReleaser)">
+            <summary>
+            Освобождает блокировку по запросу пользователя.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncLock.CreateNextReleaser">
+            <summary>
+            Увеличивает идентификатор что-бы инвалидировать все ранее созданные <see cref="T:DanilovSoft.AsyncEx.LockReleaser"/>.
+            </summary>
+            <remarks>Увеличивает <see cref="F:DanilovSoft.AsyncEx.AsyncLock._releaseTaskToken"/>.</remarks>
+            <returns><see cref="T:DanilovSoft.AsyncEx.LockReleaser"/> у которого есть эксклюзивное право освободить текущую блокировку.</returns>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncLock.GetNextReleaserToken">
+            <summary>
+            Предотвращает освобождение блокировки чужим потоком.
+            </summary>
+            <remarks>Увеличивает <see cref="F:DanilovSoft.AsyncEx.AsyncLock._releaseTaskToken"/>.</remarks>
+        </member>
+        <member name="F:DanilovSoft.AsyncEx.AsyncLock.WaitQueue._queue">
+            <summary>
+            Очередь ожидающий потоков (тасков) претендующих на захват блокировки.
+            </summary>
+            <remarks>Доступ только через блокировку <see cref="!:_context._syncObj"/>.</remarks>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncLock.WaitQueue.EnqueueAndWait">
+            <summary>
+            Добавляет поток в очередь на ожидание эксклюзивной блокировки.
+            </summary>
+        </member>
+        <member name="P:DanilovSoft.AsyncEx.AsyncLock.DebugView.PendingTasks">
+            <summary>
+            Сколько потоков (тасков) ожидают блокировку.
+            </summary>
+        </member>
         <member name="T:DanilovSoft.AsyncEx.LazyAsync`1">
             <summary>
             Provides support for asynchronous lazy initialization. This type is fully threadsafe.
@@ -204,6 +277,24 @@
             <summary>A debugger view of the <see cref="T:DanilovSoft.AsyncEx.LazyAsync`1"/> to surface additional debugging properties and 
             to ensure that the <see cref="T:DanilovSoft.AsyncEx.LazyAsync`1"/> does not become initialized if it was not already.
             </summary>
+        </member>
+        <member name="T:DanilovSoft.AsyncEx.LockReleaser">
+            <summary>
+            Держит блокировку <see cref="T:DanilovSoft.AsyncEx.AsyncLock"/> до вызова Dispose.
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.AsyncEx.LockReleaser.ReleaseToken">
+            <summary>
+            Токен который изначально имел право выполнить освобождение блокировки.
+            </summary>
+            <remarks>Сверяется с <see cref="F:DanilovSoft.AsyncEx.AsyncLock._releaseTaskToken"/> в момент Dispose 
+            для проверки права освобождения блокировки (предотвращение повторного Dispose).</remarks>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.LockReleaser.Dispose">
+            <summary>
+            Освобождает захваченную блокировку.
+            </summary>
+            <remarks>Потокобезопасно.</remarks>
         </member>
         <member name="M:DanilovSoft.AsyncEx.ManualResetEventSource`1.Wait(System.TimeSpan,`0@)">
             <exception cref="T:System.InvalidOperationException"/>

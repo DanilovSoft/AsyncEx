@@ -1,4 +1,4 @@
-using DanilovSoft.Threading.Tasks;
+п»їusing DanilovSoft.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,26 +15,26 @@ namespace DanilovSoft.AsyncEx
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private bool DebugDisplay => Volatile.Read(ref _taken) == 1;
 
-        // Для добавления потока в очередь и удаления из очереди.
+        // Р”Р»СЏ РґРѕР±Р°РІР»РµРЅРёСЏ РїРѕС‚РѕРєР° РІ РѕС‡РµСЂРµРґСЊ Рё СѓРґР°Р»РµРЅРёСЏ РёР· РѕС‡РµСЂРµРґРё.
         private readonly object _syncObj = new object();
 
         /// <summary>
-        /// Очередь пользовательских тасков, которые хотят получить блокировку.
+        /// РћС‡РµСЂРµРґСЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёС… С‚Р°СЃРєРѕРІ, РєРѕС‚РѕСЂС‹Рµ С…РѕС‚СЏС‚ РїРѕР»СѓС‡РёС‚СЊ Р±Р»РѕРєРёСЂРѕРІРєСѓ.
         /// </summary>
-        /// <remarks>Доступ через блокировку <see cref="_syncObj"/></remarks>
+        /// <remarks>Р”РѕСЃС‚СѓРї С‡РµСЂРµР· Р±Р»РѕРєРёСЂРѕРІРєСѓ <see cref="_syncObj"/></remarks>
         private readonly WaitQueue _queue;
 
         /// <summary>
-        /// Токен для потока у которого есть право освободить блокировку.
-        /// Может только увеличиваться.
+        /// РўРѕРєРµРЅ РґР»СЏ РїРѕС‚РѕРєР° Сѓ РєРѕС‚РѕСЂРѕРіРѕ РµСЃС‚СЊ РїСЂР°РІРѕ РѕСЃРІРѕР±РѕРґРёС‚СЊ Р±Р»РѕРєРёСЂРѕРІРєСѓ.
+        /// РњРѕР¶РµС‚ С‚РѕР»СЊРєРѕ СѓРІРµР»РёС‡РёРІР°С‚СЊСЃСЏ.
         /// </summary>
-        /// <remarks>Превентивная защита от освобождения блокировки чужим потоком.</remarks>
+        /// <remarks>РџСЂРµРІРµРЅС‚РёРІРЅР°СЏ Р·Р°С‰РёС‚Р° РѕС‚ РѕСЃРІРѕР±РѕР¶РґРµРЅРёСЏ Р±Р»РѕРєРёСЂРѕРІРєРё С‡СѓР¶РёРј РїРѕС‚РѕРєРѕРј.</remarks>
         internal short _releaseTaskToken;
 
         /// <summary>
-        /// Когда блокировка захвачена таском.
+        /// РљРѕРіРґР° Р±Р»РѕРєРёСЂРѕРІРєР° Р·Р°С…РІР°С‡РµРЅР° С‚Р°СЃРєРѕРј.
         /// </summary>
-        /// <remarks>Модификация через блокировку <see cref="_syncObj"/> или атомарно.</remarks>
+        /// <remarks>РњРѕРґРёС„РёРєР°С†РёСЏ С‡РµСЂРµР· Р±Р»РѕРєРёСЂРѕРІРєСѓ <see cref="_syncObj"/> РёР»Рё Р°С‚РѕРјР°СЂРЅРѕ.</remarks>
         private int _taken;
 
         public AsyncLock()
@@ -43,7 +43,7 @@ namespace DanilovSoft.AsyncEx
         }
 
         /// <summary>
-        /// Выполняет блокировку задачи (Task), все задачи запущенные через LockAsync будут выполнятся последовательно
+        /// Р’С‹РїРѕР»РЅСЏРµС‚ Р±Р»РѕРєРёСЂРѕРІРєСѓ Р·Р°РґР°С‡Рё (Task), РІСЃРµ Р·Р°РґР°С‡Рё Р·Р°РїСѓС‰РµРЅРЅС‹Рµ С‡РµСЂРµР· LockAsync Р±СѓРґСѓС‚ РІС‹РїРѕР»РЅСЏС‚СЃСЏ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕ
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         public Task LockAsync(Func<Task> asyncAction)
@@ -53,22 +53,22 @@ namespace DanilovSoft.AsyncEx
             {
                 ValueTask<LockReleaser> lockTask = LockAsync();
 
-                if (lockTask.IsCompletedSuccessfully) // Блокировка захвачена синхронно.
+                if (lockTask.IsCompletedSuccessfully) // Р‘Р»РѕРєРёСЂРѕРІРєР° Р·Р°С…РІР°С‡РµРЅР° СЃРёРЅС…СЂРѕРЅРЅРѕ.
                 {
                     IDisposable? releaser = lockTask.Result;
                     try
                     {
                         Task userTask = asyncAction();
 
-                        if (userTask.IsCompletedSuccessfully()) // Пользовательский метод выполнился синхронно.
+                        if (userTask.IsCompletedSuccessfully()) // РџРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёР№ РјРµС‚РѕРґ РІС‹РїРѕР»РЅРёР»СЃСЏ СЃРёРЅС…СЂРѕРЅРЅРѕ.
                         {
-                            return Task.CompletedTask; // Освободит блокировку.
+                            return Task.CompletedTask; // РћСЃРІРѕР±РѕРґРёС‚ Р±Р»РѕРєРёСЂРѕРІРєСѓ.
                         }
-                        else // Будем ждать пользовательский метод.
+                        else // Р‘СѓРґРµРј Р¶РґР°С‚СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёР№ РјРµС‚РѕРґ.
                         {
                             IDisposable releaserCopy = releaser;
 
-                            // Предотвратить преждевременный Dispose.
+                            // РџСЂРµРґРѕС‚РІСЂР°С‚РёС‚СЊ РїСЂРµР¶РґРµРІСЂРµРјРµРЅРЅС‹Р№ Dispose.
                             releaser = null;
 
                             return WaitUserActionAndRelease(userTask, releaserCopy);
@@ -91,7 +91,7 @@ namespace DanilovSoft.AsyncEx
                         releaser?.Dispose();
                     }
                 }
-                else // Блокировка занята другим потоком.
+                else // Р‘Р»РѕРєРёСЂРѕРІРєР° Р·Р°РЅСЏС‚Р° РґСЂСѓРіРёРј РїРѕС‚РѕРєРѕРј.
                 {
                     return WaitLockAsync(lockTask.AsTask(), asyncAction);
 
@@ -114,7 +114,7 @@ namespace DanilovSoft.AsyncEx
         }
 
         /// <summary>
-        /// Action будет разделять блоировку совместно с задачами (Task) запущеными через LockAsync и будет выполнятся последовательно 
+        /// Action Р±СѓРґРµС‚ СЂР°Р·РґРµР»СЏС‚СЊ Р±Р»РѕРёСЂРѕРІРєСѓ СЃРѕРІРјРµСЃС‚РЅРѕ СЃ Р·Р°РґР°С‡Р°РјРё (Task) Р·Р°РїСѓС‰РµРЅС‹РјРё С‡РµСЂРµР· LockAsync Рё Р±СѓРґРµС‚ РІС‹РїРѕР»РЅСЏС‚СЃСЏ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕ 
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         public Task LockAsync(Action action)
@@ -159,20 +159,20 @@ namespace DanilovSoft.AsyncEx
         }
 
         /// <summary>
-        /// Блокирует выполнение до тех пор пока не будет захвачена блокировка
-        /// предоставляющая эксклюзивный доступ к текущему экземпляру <see cref="AsyncLock"/>.
-        /// Освобождение блокировки производится вызовом <see cref="LockReleaser.Dispose"/>.
+        /// Р‘Р»РѕРєРёСЂСѓРµС‚ РІС‹РїРѕР»РЅРµРЅРёРµ РґРѕ С‚РµС… РїРѕСЂ РїРѕРєР° РЅРµ Р±СѓРґРµС‚ Р·Р°С…РІР°С‡РµРЅР° Р±Р»РѕРєРёСЂРѕРІРєР°
+        /// РїСЂРµРґРѕСЃС‚Р°РІР»СЏСЋС‰Р°СЏ СЌРєСЃРєР»СЋР·РёРІРЅС‹Р№ РґРѕСЃС‚СѓРї Рє С‚РµРєСѓС‰РµРјСѓ СЌРєР·РµРјРїР»СЏСЂСѓ <see cref="AsyncLock"/>.
+        /// РћСЃРІРѕР±РѕР¶РґРµРЅРёРµ Р±Р»РѕРєРёСЂРѕРІРєРё РїСЂРѕРёР·РІРѕРґРёС‚СЃСЏ РІС‹Р·РѕРІРѕРј <see cref="LockReleaser.Dispose"/>.
         /// </summary>
-        /// <returns>Ресурс удерживающий блокировку.</returns>
+        /// <returns>Р РµСЃСѓСЂСЃ СѓРґРµСЂР¶РёРІР°СЋС‰РёР№ Р±Р»РѕРєРёСЂРѕРІРєСѓ.</returns>
         public ValueTask<LockReleaser> LockAsync()
         {
-            // Попытка захватить блокировку атомарно.
+            // РџРѕРїС‹С‚РєР° Р·Р°С…РІР°С‚РёС‚СЊ Р±Р»РѕРєРёСЂРѕРІРєСѓ Р°С‚РѕРјР°СЂРЅРѕ.
             bool taken = Interlocked.CompareExchange(ref _taken, 1, 0) == 0;
 
-            if (taken) // Захватили блокировку.
+            if (taken) // Р—Р°С…РІР°С‚РёР»Рё Р±Р»РѕРєРёСЂРѕРІРєСѓ.
             {
-                // Несмотря на то что мы не захватили _syncObj,
-                // другие потоки не могут вызвать CreateNextReleaser одновременно с нами.
+                // РќРµСЃРјРѕС‚СЂСЏ РЅР° С‚Рѕ С‡С‚Рѕ РјС‹ РЅРµ Р·Р°С…РІР°С‚РёР»Рё _syncObj,
+                // РґСЂСѓРіРёРµ РїРѕС‚РѕРєРё РЅРµ РјРѕРіСѓС‚ РІС‹Р·РІР°С‚СЊ CreateNextReleaser РѕРґРЅРѕРІСЂРµРјРµРЅРЅРѕ СЃ РЅР°РјРё.
 
                 LockReleaser releaser = CreateNextReleaser();
 
@@ -182,7 +182,7 @@ namespace DanilovSoft.AsyncEx
             {
                 lock (_syncObj)
                 {
-                    if (_taken == 1) // Блокировка занята другим потоком -> становимся в очередь.
+                    if (_taken == 1) // Р‘Р»РѕРєРёСЂРѕРІРєР° Р·Р°РЅСЏС‚Р° РґСЂСѓРіРёРј РїРѕС‚РѕРєРѕРј -> СЃС‚Р°РЅРѕРІРёРјСЃСЏ РІ РѕС‡РµСЂРµРґСЊ.
                     {
                         return new ValueTask<LockReleaser>(task: _queue.EnqueueAndWait());
                     }
@@ -199,27 +199,27 @@ namespace DanilovSoft.AsyncEx
         }
 
         /// <summary>
-        /// Освобождает блокировку по запросу пользователя.
+        /// РћСЃРІРѕР±РѕР¶РґР°РµС‚ Р±Р»РѕРєРёСЂРѕРІРєСѓ РїРѕ Р·Р°РїСЂРѕСЃСѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ.
         /// </summary>
         internal void ReleaseLock(LockReleaser userReleaser)
         {
-            Debug.Assert(_taken == 1, "Нарушение порядка захвата блокировки");
-            Debug.Assert(userReleaser.ReleaseToken == _releaseTaskToken, "Освобождения блокировки чужим потоком");
+            Debug.Assert(_taken == 1, "РќР°СЂСѓС€РµРЅРёРµ РїРѕСЂСЏРґРєР° Р·Р°С…РІР°С‚Р° Р±Р»РѕРєРёСЂРѕРІРєРё");
+            Debug.Assert(userReleaser.ReleaseToken == _releaseTaskToken, "РћСЃРІРѕР±РѕР¶РґРµРЅРёСЏ Р±Р»РѕРєРёСЂРѕРІРєРё С‡СѓР¶РёРј РїРѕС‚РѕРєРѕРј");
 
             lock (_syncObj)
             {
-                if (userReleaser.ReleaseToken == _releaseTaskToken) // У текущего потока (релизера) есть право освободить блокировку.
+                if (userReleaser.ReleaseToken == _releaseTaskToken) // РЈ С‚РµРєСѓС‰РµРіРѕ РїРѕС‚РѕРєР° (СЂРµР»РёР·РµСЂР°) РµСЃС‚СЊ РїСЂР°РІРѕ РѕСЃРІРѕР±РѕРґРёС‚СЊ Р±Р»РѕРєРёСЂРѕРІРєСѓ.
                 {
-                    if (_queue.Count == 0) // Больше потоков нет -> освободить блокировку.
+                    if (_queue.Count == 0) // Р‘РѕР»СЊС€Рµ РїРѕС‚РѕРєРѕРІ РЅРµС‚ -> РѕСЃРІРѕР±РѕРґРёС‚СЊ Р±Р»РѕРєРёСЂРѕРІРєСѓ.
                     {
-                        // Запретить освобождать блокировку всем потокам.
+                        // Р—Р°РїСЂРµС‚РёС‚СЊ РѕСЃРІРѕР±РѕР¶РґР°С‚СЊ Р±Р»РѕРєРёСЂРѕРІРєСѓ РІСЃРµРј РїРѕС‚РѕРєР°Рј.
                         SafeGetNextReleaserToken();
 
                         _taken = 0;
                     }
-                    else // На блокировку претендуют другие потоки.
+                    else // РќР° Р±Р»РѕРєРёСЂРѕРІРєСѓ РїСЂРµС‚РµРЅРґСѓСЋС‚ РґСЂСѓРіРёРµ РїРѕС‚РѕРєРё.
                     {
-                        // Передать владение блокировкой следующему потоку (разрешить войти в критическую секцию).
+                        // РџРµСЂРµРґР°С‚СЊ РІР»Р°РґРµРЅРёРµ Р±Р»РѕРєРёСЂРѕРІРєРѕР№ СЃР»РµРґСѓСЋС‰РµРјСѓ РїРѕС‚РѕРєСѓ (СЂР°Р·СЂРµС€РёС‚СЊ РІРѕР№С‚Рё РІ РєСЂРёС‚РёС‡РµСЃРєСѓСЋ СЃРµРєС†РёСЋ).
                         _queue.DequeueAndEnter(SafeCreateNextReleaser());
                     }
                 }
@@ -227,13 +227,13 @@ namespace DanilovSoft.AsyncEx
         }
 
         /// <summary>
-        /// Увеличивает идентификатор что-бы инвалидировать все ранее созданные <see cref="LockReleaser"/>.
+        /// РЈРІРµР»РёС‡РёРІР°РµС‚ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ С‡С‚Рѕ-Р±С‹ РёРЅРІР°Р»РёРґРёСЂРѕРІР°С‚СЊ РІСЃРµ СЂР°РЅРµРµ СЃРѕР·РґР°РЅРЅС‹Рµ <see cref="LockReleaser"/>.
         /// </summary>
-        /// <remarks>Увеличивает <see cref="_releaseTaskToken"/>.</remarks>
-        /// <returns><see cref="LockReleaser"/> у которого есть эксклюзивное право освободить текущую блокировку.</returns>
+        /// <remarks>РЈРІРµР»РёС‡РёРІР°РµС‚ <see cref="_releaseTaskToken"/>.</remarks>
+        /// <returns><see cref="LockReleaser"/> Сѓ РєРѕС‚РѕСЂРѕРіРѕ РµСЃС‚СЊ СЌРєСЃРєР»СЋР·РёРІРЅРѕРµ РїСЂР°РІРѕ РѕСЃРІРѕР±РѕРґРёС‚СЊ С‚РµРєСѓС‰СѓСЋ Р±Р»РѕРєРёСЂРѕРІРєСѓ.</returns>
         private LockReleaser CreateNextReleaser()
         {
-            Debug.Assert(_taken == 1, "Блокировка должна быть захвачена");
+            Debug.Assert(_taken == 1, "Р‘Р»РѕРєРёСЂРѕРІРєР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ Р·Р°С…РІР°С‡РµРЅР°");
 
             return new LockReleaser(this, GetNextReleaserToken());
         }
@@ -242,15 +242,15 @@ namespace DanilovSoft.AsyncEx
         private LockReleaser SafeCreateNextReleaser()
         {
             Debug.Assert(Monitor.IsEntered(_syncObj));
-            Debug.Assert(_taken == 1, "Блокировка должна быть захвачена");
+            Debug.Assert(_taken == 1, "Р‘Р»РѕРєРёСЂРѕРІРєР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ Р·Р°С…РІР°С‡РµРЅР°");
 
             return new LockReleaser(this, SafeGetNextReleaserToken());
         }
 
         /// <summary>
-        /// Предотвращает освобождение блокировки чужим потоком.
+        /// РџСЂРµРґРѕС‚РІСЂР°С‰Р°РµС‚ РѕСЃРІРѕР±РѕР¶РґРµРЅРёРµ Р±Р»РѕРєРёСЂРѕРІРєРё С‡СѓР¶РёРј РїРѕС‚РѕРєРѕРј.
         /// </summary>
-        /// <remarks>Увеличивает <see cref="_releaseTaskToken"/>.</remarks>
+        /// <remarks>РЈРІРµР»РёС‡РёРІР°РµС‚ <see cref="_releaseTaskToken"/>.</remarks>
         private short GetNextReleaserToken()
         {
             Debug.Assert(_taken == 1);
@@ -269,9 +269,9 @@ namespace DanilovSoft.AsyncEx
             private readonly AsyncLock _context;
 
             /// <summary>
-            /// Очередь ожидающий потоков (тасков) претендующих на захват блокировки.
+            /// РћС‡РµСЂРµРґСЊ РѕР¶РёРґР°СЋС‰РёР№ РїРѕС‚РѕРєРѕРІ (С‚Р°СЃРєРѕРІ) РїСЂРµС‚РµРЅРґСѓСЋС‰РёС… РЅР° Р·Р°С…РІР°С‚ Р±Р»РѕРєРёСЂРѕРІРєРё.
             /// </summary>
-            /// <remarks>Доступ только через блокировку <see cref="_context._syncObj"/>.</remarks>
+            /// <remarks>Р”РѕСЃС‚СѓРї С‚РѕР»СЊРєРѕ С‡РµСЂРµР· Р±Р»РѕРєРёСЂРѕРІРєСѓ <see cref="_context._syncObj"/>.</remarks>
             private readonly Queue<TaskCompletionSource<LockReleaser>> _queue = new Queue<TaskCompletionSource<LockReleaser>>();
 
             public int Count => _queue.Count;
@@ -282,23 +282,23 @@ namespace DanilovSoft.AsyncEx
             }
 
             /// <summary>
-            /// Добавляет поток в очередь на ожидание эксклюзивной блокировки.
+            /// Р”РѕР±Р°РІР»СЏРµС‚ РїРѕС‚РѕРє РІ РѕС‡РµСЂРµРґСЊ РЅР° РѕР¶РёРґР°РЅРёРµ СЌРєСЃРєР»СЋР·РёРІРЅРѕР№ Р±Р»РѕРєРёСЂРѕРІРєРё.
             /// </summary>
             internal Task<LockReleaser> EnqueueAndWait()
             {
-                Debug.Assert(Monitor.IsEntered(_context._syncObj), "Выполнять можно только в блокировке");
+                Debug.Assert(Monitor.IsEntered(_context._syncObj), "Р’С‹РїРѕР»РЅСЏС‚СЊ РјРѕР¶РЅРѕ С‚РѕР»СЊРєРѕ РІ Р±Р»РѕРєРёСЂРѕРІРєРµ");
 
                 var tcs = new TaskCompletionSource<LockReleaser>(TaskCreationOptions.RunContinuationsAsynchronously);
-                _queue.Enqueue(tcs); // Добавить в конец.
+                _queue.Enqueue(tcs); // Р”РѕР±Р°РІРёС‚СЊ РІ РєРѕРЅРµС†.
                 return tcs.Task;
             }
 
             internal void DequeueAndEnter(LockReleaser releaser)
             {
-                Debug.Assert(Monitor.IsEntered(_context._syncObj), "Выполнять можно только в блокировке");
+                Debug.Assert(Monitor.IsEntered(_context._syncObj), "Р’С‹РїРѕР»РЅСЏС‚СЊ РјРѕР¶РЅРѕ С‚РѕР»СЊРєРѕ РІ Р±Р»РѕРєРёСЂРѕРІРєРµ");
                 Debug.Assert(_queue.Count > 0);
 
-                // Взять первый поток в очереди.
+                // Р’Р·СЏС‚СЊ РїРµСЂРІС‹Р№ РїРѕС‚РѕРє РІ РѕС‡РµСЂРµРґРё.
                 var tcs = _queue.Dequeue();
 
                 bool success = tcs.TrySetResult(releaser);
@@ -317,7 +317,7 @@ namespace DanilovSoft.AsyncEx
             }
 
             /// <summary>
-            /// Сколько потоков (тасков) ожидают блокировку.
+            /// РЎРєРѕР»СЊРєРѕ РїРѕС‚РѕРєРѕРІ (С‚Р°СЃРєРѕРІ) РѕР¶РёРґР°СЋС‚ Р±Р»РѕРєРёСЂРѕРІРєСѓ.
             /// </summary>
             public int PendingTasks => _self._queue.Count;
         }

@@ -13,28 +13,15 @@ namespace TestApp
         {
             var t = new PrioritizedTaskScheduler(ThreadPriority.Highest);
 
-            Task.Factory.StartNew(() =>
+            Task.Factory.StartNew(async () =>
             {
-                var child = Task.Factory.StartNew(() => 
-                {
-                    Console.WriteLine(Thread.CurrentThread.ManagedThreadId + " " + Thread.CurrentThread.Priority);
-                    Thread.SpinWait(5000000);
-                    Console.WriteLine(Thread.CurrentThread.ManagedThreadId + " " + Thread.CurrentThread.Priority);
-                }, TaskCreationOptions.AttachedToParent);
+                var sc = SynchronizationContext.Current;
 
-                //while (true)
-                //{
-                //    Console.WriteLine(Thread.CurrentThread.ManagedThreadId + " " + Thread.CurrentThread.Priority);
-                //    await Task.Delay(2000);
-                //    Console.WriteLine(Thread.CurrentThread.ManagedThreadId + " " + Thread.CurrentThread.Priority);
-                //}
+                Console.WriteLine(Thread.CurrentThread.ManagedThreadId + " " + Thread.CurrentThread.Priority);
+                await Task.Delay(2000);
+                Console.WriteLine(Thread.CurrentThread.ManagedThreadId + " " + Thread.CurrentThread.Priority);
 
-            }, default, TaskCreationOptions.None, t)
-                .ContinueWith(_ =>
-                {
-
-                }, TaskContinuationOptions.AttachedToParent);
-                //.Wait();
+            }, default, TaskCreationOptions.None, t).Wait();
 
 
             //Task.Factory.StartNew(async () =>

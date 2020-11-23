@@ -1,4 +1,5 @@
 ﻿using DanilovSoft;
+using DanilovSoft.AsyncEx;
 using DanilovSoft.Threading.Tasks;
 using System;
 using System.Collections.Generic;
@@ -20,12 +21,12 @@ namespace System.Threading
         {
             _tcs = new TaskCompletionSource<VoidStruct>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (isSet)
-                _tcs.TrySetResult(VoidStruct.Instance);
+                _tcs.TrySetResult(default);
         }
 
         public void Set()
         {
-            _tcs.TrySetResult(VoidStruct.Instance);
+            _tcs.TrySetResult(default);
         }
 
         public void Reset()

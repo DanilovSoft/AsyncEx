@@ -167,6 +167,17 @@
             Конвеёйр для параллельно обработки данных.
             </summary>
         </member>
+        <member name="M:DanilovSoft.AsyncEx.TaskEx.WhenAllOrAnyException(System.Threading.Tasks.Task[])">
+            <remarks>Проглатывает последующие исключения.</remarks>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.TaskEx.WhenAllOrAnyException(System.Collections.Generic.IEnumerable{System.Threading.Tasks.Task})">
+            <remarks>Проглатывает последующие исключения.</remarks>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.TaskEx.Run``2(System.Func{``0,System.Threading.Tasks.Task{``1}},``0)">
+            <summary>
+            Шорткат для Task.Run(() =>
+            </summary>
+        </member>
         <member name="M:DanilovSoft.Threading.Tasks.TaskExtensions.WaitAsync(System.Threading.Tasks.Task,System.Threading.CancellationToken)">
             <summary>
             Asynchronously waits for the task to complete, or for the cancellation token to be canceled.

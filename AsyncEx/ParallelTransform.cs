@@ -15,15 +15,14 @@
         IEnumerable<Aggregator<TResult>> Run<TIn, TOut, TResult>(IEnumerable<TIn> items, Func<TIn, Task<TOut>> func, Func<TIn, TOut, TResult> resultSelector);
     }
 
-    public readonly struct Aggregator<TOutput>
+    public sealed class Aggregator<TOutput>
     {
         public Func<Task<TOutput>> Func { get; }
-        public TaskCompletionSource<TOutput> Tcs { get; }
+        internal TOutput Result { get; set; } = default!;
 
         public Aggregator(Func<Task<TOutput>> func)
         {
             Func = func;
-            Tcs = new();
         }
     }
 
@@ -97,16 +96,7 @@
 
             var actionBlock = new ActionBlock<Aggregator<TOutput>>(async aggregator =>
             {
-                try
-                {
-                    TOutput tout = await aggregator.Func().ConfigureAwait(false);
-                    aggregator.Tcs.TrySetResult(tout);
-                }
-                catch (Exception ex)
-                {
-                    aggregator.Tcs.TrySetException(ex);
-                    throw; // Прервём конвейер.
-                }
+                aggregator.Result = await aggregator.Func().ConfigureAwait(false);
             }, opt);
 
             foreach (var input in perInputAggr)
@@ -124,12 +114,9 @@
             actionBlock.Complete();
             await actionBlock.Completion.ConfigureAwait(false);
 
-            var tasks = perInputAggr.SelectMany(x => x.Agg.Select(a => a.Tcs.Task));
-            await Task.WhenAll(tasks).ConfigureAwait(false);
-
             foreach (var child in perInputAggr)
             {
-                IList<TOutput> outputArr = child.Agg.Select(x => x.Tcs.Task.Result).ToArray();
+                TOutput[] outputArr = child.Agg.Select(x => x.Result).ToArray();
                 TResult final = resultSelector(child.Input, outputArr);
                 yield return final;
             }

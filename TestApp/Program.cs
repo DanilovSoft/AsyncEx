@@ -34,7 +34,6 @@ namespace TestApp
                 (item, Childs) => (item.Id, Childs),
                 maxDegreeOfParallelism: 10);
 
-
             foreach (var item in withName)
             {
                 Console.WriteLine(item.Id);
@@ -46,14 +45,8 @@ namespace TestApp
             }
         }
 
-        static async Task<long[]> GetChilds(int id)
-        {
-            return new long[] { 5, 6, 7 };
-        }
+        static async Task<long[]> GetChilds(int id) => new long[] { 5, 6, 7 };
 
-        static async Task<string> GetNameByChildId(long childId)
-        {
-            return $"child_{childId}";
-        }
+        static async Task<string> GetNameByChildId(long childId) => $"child_{childId}";
     }
 }

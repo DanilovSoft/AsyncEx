@@ -12,12 +12,13 @@
     public interface IParallelEnumerator<out TInput>
     {
         TInput Item { get; }
-        IEnumerable<Aggregator<TResult>> Run<TIn, TOut, TResult>(IEnumerable<TIn> items, Func<TIn, Task<TOut>> func, Func<TIn, TOut, TResult> resultSelector);
+        IEnumerable<Aggregator<TResult>> Run<TIn, TOut, TResult>(IEnumerable<TIn> items, 
+            Func<TIn, Task<TOut>> func, Func<TIn, TOut, TResult> resultSelector);
     }
 
     public sealed class Aggregator<TOutput>
     {
-        public Func<Task<TOutput>> Func { get; }
+        internal Func<Task<TOutput>> Func { get; }
         internal TOutput Result { get; set; } = default!;
 
         public Aggregator(Func<Task<TOutput>> func)
@@ -27,7 +28,7 @@
     }
 
     /// <summary>
-    /// Конвеёйр для параллельно обработки данных.
+    /// Конвейер для параллельной обработки данных.
     /// </summary>
     public sealed class ParallelTransform
     {

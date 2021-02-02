@@ -54,30 +54,6 @@ namespace DanilovSoft.AsyncEx
             }
         }
 
-        public bool TrySet(T item)
-        {
-            // Fast-Path проверка.
-            if (_state == State.WaitingItem)
-            {
-                lock (_syncObj)
-                {
-                    if (_state == State.WaitingItem)
-                    {
-                        _item = item;
-
-                        // Объект успешно сохранён для потока потребителя.
-                        _state = State.HoldsItem;
-
-                        // Если есть ожидающий поток потребителя, то разблокировать его.
-                        Monitor.Pulse(_syncObj);
-
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
         public bool TryTake([MaybeNull] out T item)
         {
             lock (_syncObj)
@@ -101,6 +77,30 @@ namespace DanilovSoft.AsyncEx
                     throw new InvalidOperationException(ConsistencyError);
                 }
             }
+        }
+
+        public bool TrySet(T item)
+        {
+            // Fast-Path проверка.
+            if (_state == State.WaitingItem)
+            {
+                lock (_syncObj)
+                {
+                    if (_state == State.WaitingItem)
+                    {
+                        _item = item;
+
+                        // Объект успешно сохранён для потока потребителя.
+                        _state = State.HoldsItem;
+
+                        // Если есть ожидающий поток потребителя, то разблокировать его.
+                        Monitor.Pulse(_syncObj);
+
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         /// <exception cref="InvalidOperationException"/>

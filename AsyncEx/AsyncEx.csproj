@@ -7,9 +7,10 @@
     <AssemblyName>DanilovSoft.AsyncEx</AssemblyName>
     <RootNamespace>DanilovSoft.AsyncEx</RootNamespace>
     <SignAssembly>true</SignAssembly>
+    <Nullable>enable</Nullable>
     <AssemblyOriginatorKeyFile>DanilovSoft.AsyncEx.pfx</AssemblyOriginatorKeyFile>
     <Configurations>Debug;Release;Debug-Work</Configurations>
-    <Version>1.3.0</Version>
+    <Version>1.4.1</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Vitalii Danilov</Authors>
     <DocumentationFile>DanilovSoft.AsyncEx.xml</DocumentationFile>

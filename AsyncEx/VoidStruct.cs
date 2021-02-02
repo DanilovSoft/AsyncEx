@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 
-namespace DanilovSoft
+namespace DanilovSoft.AsyncEx
 {
-    internal readonly struct VoidStruct
-    {
-        public static readonly VoidStruct Instance = new VoidStruct();
-    }
+    [StructLayout(LayoutKind.Auto)]
+    internal readonly struct VoidStruct { }
 }

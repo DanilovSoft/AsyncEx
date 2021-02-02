@@ -29,9 +29,11 @@ namespace TestApp
                 _mreFeedback.Reset();
                 _mreInit.Set();
 
-                _mreFeedback.Wait();
-
-                object img = Volatile.Read(ref _image);
+                if (_mcs1.Wait(timeout: TimeSpan.FromSeconds(5), out string? value1))
+                {
+                    // Передаёшь value1 в конвейер.
+                }
+                _mcs2.Wait(timeout: TimeSpan.FromSeconds(5), out string? value2);
             }
         }
 

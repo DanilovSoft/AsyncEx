@@ -8,13 +8,15 @@ namespace TestApp
 {
     class Program
     {
-        static readonly ManualResetEventSource<string> _mcs1 = new ManualResetEventSource<string>();
-        static readonly ManualResetEventSource<string> _mcs2 = new ManualResetEventSource<string>();
+        static readonly ManualResetEventSource<byte[]> _mcs1 = new ManualResetEventSource<byte[]>();
+
+        static object _image;
+        static ManualResetEventSlim _mreInit = new ManualResetEventSlim();
+        static ManualResetEventSlim _mreFeedback = new ManualResetEventSlim();
 
         static void Main()
         {
-            new Thread(Thread1).Start();
-            new Thread(Thread2).Start();
+            new Thread(CameraThread).Start();
             MainThread();
         }
 
@@ -24,33 +26,27 @@ namespace TestApp
             {
                 Thread.Sleep(3_000);
 
-                _mcs1.Reset();
-                _mcs2.Reset();
+                _mreFeedback.Reset();
+                _mreInit.Set();
 
-                _mcs1.Wait(timeout: TimeSpan.FromSeconds(5), out string? value1);
-                _mcs2.Wait(timeout: TimeSpan.FromSeconds(5), out string? value2);
+                _mreFeedback.Wait();
+
+                object img = Volatile.Read(ref _image);
             }
         }
 
-        static void Thread1()
+        static void CameraThread()
         {
             while (true)
             {
                 Thread.Sleep(1_000);
-                string value = new Random().Next().ToString();
 
-                _mcs1.TrySet(value);
-            }
-        }
-
-        static void Thread2()
-        {
-            while (true)
-            {
-                Thread.Sleep(1_000);
-                string value = new Random().Next().ToString();
-
-                _mcs2.TrySet(value);
+                if (_mreInit.Wait(0))
+                {
+                    Volatile.Write(ref _image, new object());
+                    _mreInit.Reset();
+                    _mreFeedback.Set();
+                }
             }
         }
     }

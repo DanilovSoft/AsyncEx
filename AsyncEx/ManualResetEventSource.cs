@@ -161,9 +161,6 @@ namespace DanilovSoft.AsyncEx
             HoldsItem
         }
 
-        /// <summary>A debugger view of the <see cref="LazyAsync{T}"/> to surface additional debugging properties and 
-        /// to ensure that the <see cref="LazyAsync{T}"/> does not become initialized if it was not already.
-        /// </summary>
         private sealed class DebugView
         {
             private readonly ManualResetEventSource<T> _self;

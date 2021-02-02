@@ -8,48 +8,52 @@ namespace TestApp
 {
     class Program
     {
-        static readonly ManualResetEventSource<byte[]> _mcs1 = new ManualResetEventSource<byte[]>();
-
-        static object _image;
-        static ManualResetEventSlim _mreInit = new ManualResetEventSlim();
-        static ManualResetEventSlim _mreFeedback = new ManualResetEventSlim();
-
-        static void Main()
+        static async Task Main()
         {
-            new Thread(CameraThread).Start();
-            MainThread();
-        }
+            int[] itemIds = new[] { 1, 2, 3 };
 
-        static void MainThread()
-        {
-            while (true)
+            // Для каждого Id получим коллекцию дочерних записей.
+            var items = await ParallelTransform.Run(itemIds, id => GetChilds(id),
+                (Id, Childs) => (Id, Childs),
+                maxDegreeOfParallelism: 10);
+
+            foreach (var item in items)
             {
-                Thread.Sleep(3_000);
-
-                _mreFeedback.Reset();
-                _mreInit.Set();
-
-                if (_mcs1.Wait(timeout: TimeSpan.FromSeconds(5), out string? value1))
+                Console.WriteLine(item.Id);
+                foreach (long childId in item.Childs)
                 {
-                    // Передаёшь value1 в конвейер.
-                }
-                _mcs2.Wait(timeout: TimeSpan.FromSeconds(5), out string? value2);
-            }
-        }
-
-        static void CameraThread()
-        {
-            while (true)
-            {
-                Thread.Sleep(1_000);
-
-                if (_mreInit.Wait(0))
-                {
-                    Volatile.Write(ref _image, new object());
-                    _mreInit.Reset();
-                    _mreFeedback.Set();
+                    Console.WriteLine(childId);
                 }
             }
+
+            // Обогощаем дочерние записи "именем".
+            var withName = await ParallelTransform.Run(items, x =>
+            {
+                return x.Run(x.Item.Childs, childId => GetNameByChildId(childId), (Id, Name) => (Id, Name));
+            },
+                (item, Childs) => (item.Id, Childs),
+                maxDegreeOfParallelism: 10);
+
+
+            foreach (var item in withName)
+            {
+                Console.WriteLine(item.Id);
+                foreach (var child in item.Childs)
+                {
+                    Console.WriteLine(child.Id);
+                    Console.WriteLine(child.Name);
+                }
+            }
+        }
+
+        static async Task<long[]> GetChilds(int id)
+        {
+            return new long[] { 5, 6, 7 };
+        }
+
+        static async Task<string> GetNameByChildId(long childId)
+        {
+            return $"child_{childId}";
         }
     }
 }

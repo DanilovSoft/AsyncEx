@@ -174,14 +174,13 @@ namespace TestApp
                 {
                     return x.Sub(xx.Item.Products, xxx =>
                     {
-                        return xxx.Run(xxx.Item.Properties, pr => GetPropertyValue(pr.PropertyId), (Property, PValue) => new Property1(Property, PValue));
+                        return xxx.Run(xxx.Item.Properties, pr => GetPropertyValue(pr.PropertyId), (Property, Value) => new Property1(Property, Value));
                     },
                     (Product, Properties) => new Product2(Product.Dto, Properties));
                 },
                 (Order, Products) => new Order3(Order.Dto, Products));
             },
             (User, Orders) => new User4(User.UserId, Orders), 1);
-
 
             foreach (User4 user in users4)
             {
@@ -200,6 +199,45 @@ namespace TestApp
                         foreach (Property1 property in product.Properties)
                         {
                             Debug.WriteLine(property.Dto.PropertyName);
+                            Debug.WriteLine(property.Value);
+                        }
+                    }
+                }
+            }
+
+            // То-же самое но кортежи.
+            var users5 = await ParallelTransform.Transform(users3, x =>
+            {
+                return x.Sub(x.Item.Orders, xx =>
+                {
+                    return x.Sub(xx.Item.Products, xxx =>
+                    {
+                        return xxx.Run(xxx.Item.Properties, pr => GetPropertyValue(pr.PropertyId), (Property, Value) => (Property.PropertyName, Value));
+                    },
+                    (Product, Properties) => (Product.Dto, Properties));
+                },
+                (Order, Products) => (Order.Dto, Products));
+            },
+            (User, Orders) => (User.UserId, Orders), 1);
+
+
+            foreach (var user in users5)
+            {
+                Debug.WriteLine(user.UserId);
+
+                foreach (var order in user.Orders)
+                {
+                    Debug.WriteLine(order.Dto.OrderId);
+                    Debug.WriteLine(order.Dto.OrderName);
+
+                    foreach (var product in order.Products)
+                    {
+                        Debug.WriteLine(product.Dto.ProductId);
+                        Debug.WriteLine(product.Dto.ProductName);
+
+                        foreach (var property in product.Properties)
+                        {
+                            Debug.WriteLine(property.PropertyName);
                             Debug.WriteLine(property.Value);
                         }
                     }

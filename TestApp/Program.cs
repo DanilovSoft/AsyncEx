@@ -90,7 +90,7 @@ namespace TestApp
         /// Свойство + Значение.
         /// </summary>
         [DebuggerDisplay("{Dto.PropertyName}, Value = {Value}")]
-        record Property1(PropertyDto Dto, string Value);
+        record Property1(string? PropertyName, string Value);
 
         static async Task Main()
         {
@@ -98,7 +98,8 @@ namespace TestApp
 
             // Для каждого пользователя получим коллекцию заказов.
             var users = await ParallelTransform.Run(userIds, GetOrders,
-                (UserId, Orders) => new User1(UserId, Orders));
+                (UserId, Orders) => new User1(UserId, Orders), 
+                maxDegreeOfParallelism: 10);
 
             foreach (User1 user in users)
             {
@@ -116,7 +117,8 @@ namespace TestApp
             {
                 return x.Run(x.Item.Orders, o => GetOrderProducts(o.OrderId), (Order, Products) => new Order1(Order, Products));
             },
-            (User, Orders) => new User2(User.UserId, Orders), 1);
+            (User, Orders) => new User2(User.UserId, Orders), 
+            maxDegreeOfParallelism: 10);
 
             foreach (User2 user in users2)
             {
@@ -174,13 +176,13 @@ namespace TestApp
                 {
                     return x.Sub(xx.Item.Products, xxx =>
                     {
-                        return xxx.Run(xxx.Item.Properties, pr => GetPropertyValue(pr.PropertyId), (Property, Value) => new Property1(Property, Value));
+                        return xxx.Run(xxx.Item.Properties, pr => GetPropertyValue(pr.PropertyId), (Property, Value) => new Property1(Property.PropertyName, Value));
                     },
                     (Product, Properties) => new Product2(Product.Dto, Properties));
                 },
                 (Order, Products) => new Order3(Order.Dto, Products));
             },
-            (User, Orders) => new User4(User.UserId, Orders), 1);
+            (User, Orders) => new User4(User.UserId, Orders), maxDegreeOfParallelism: 10);
 
             foreach (User4 user in users4)
             {
@@ -198,7 +200,7 @@ namespace TestApp
 
                         foreach (Property1 property in product.Properties)
                         {
-                            Debug.WriteLine(property.Dto.PropertyName);
+                            Debug.WriteLine(property.PropertyName);
                             Debug.WriteLine(property.Value);
                         }
                     }

@@ -8,6 +8,7 @@
     using System.Threading;
     using System.Threading.Tasks;
     using System.Threading.Tasks.Dataflow;
+    using DanilovSoft.Threading.Tasks;
 
     public interface IParallelEnumerator<out TInput>
     {
@@ -16,7 +17,7 @@
         IEnumerable<IAggregator<TResult>> Sub<TIn, TOut, TResult>(
             IEnumerable<TIn> items,
             Func<IParallelEnumerator<TIn>, IEnumerable<IAggregator<TOut>>> aggregateFunc,
-            Func<TIn, IList<TOut>, TResult> resultSelector);
+            Func<TIn, IReadOnlyList<TOut>, TResult> resultSelector);
 
         IEnumerable<IAggregator<TResult>> Run<TIn, TOut, TResult>(
             IEnumerable<TIn> items, 
@@ -34,21 +35,48 @@
     /// </summary>
     public sealed class ParallelTransform
     {
-        private sealed class Aggregator<TOutput, TState> : IAggregator<TOutput>
+        private sealed class Aggregator<TOutput, TArg1, TArg2, TArg3> : IAggregator<TOutput>
         {
-            private readonly Func<TState, Task<TOutput>> _asyncFunc;
+            private readonly Func<TArg1, TArg2, TArg3, Task<TOutput>> _asyncFunc;
             public TOutput Result { get; private set; } = default!;
-            private readonly TState _state;
+            private readonly TArg1 _arg1;
+            private readonly TArg2 _arg2;
+            private readonly TArg3 _arg3;
 
-            internal Aggregator(Func<TState, Task<TOutput>> func, TState state)
+            internal Aggregator(Func<TArg1, TArg2, TArg3, Task<TOutput>> func, TArg1 arg1, TArg2 arg2, TArg3 arg3)
             {
                 _asyncFunc = func;
-                _state = state;
+                _arg1 = arg1;
+                _arg2 = arg2;
+                _arg3 = arg3;
             }
 
-            public async Task InvokeAsync()
+            public Task InvokeAsync()
             {
-                Result = await _asyncFunc(_state).ConfigureAwait(false);
+                Task<TOutput> task;
+                try
+                {
+                    task = _asyncFunc(_arg1, _arg2, _arg3);
+                }
+                catch (Exception ex)
+                {
+                    return Task.FromException(ex);
+                }
+
+                if (task.IsCompletedSuccessfully())
+                {
+                    Result = task.Result;
+                    return Task.CompletedTask;
+                }
+                else
+                {
+                    return WaitAsync(task, this);
+
+                    static async Task WaitAsync(Task<TOutput> task, Aggregator<TOutput, TArg1, TArg2, TArg3> self)
+                    {
+                        self.Result = await task.ConfigureAwait(false);
+                    }
+                }
             }
         }
 
@@ -68,19 +96,40 @@
             {
                 foreach (TIn subItem in subItems)
                 {
-                    yield return CreateAggregator(static async t =>
+                    yield return CreateAggregator(static (func, subItem, resultSelector) =>
                     {
-                        TOut result = await t.func(t.subItem).ConfigureAwait(false);
-                        return t.resultSelector(t.subItem, result);
-                    }, 
-                    state: (func, subItem, resultSelector));
+                        Task<TOut> task;
+                        try
+                        {
+                            task = func(subItem);
+                        }
+                        catch (Exception ex)
+                        {
+                            return Task.FromException<TRes>(ex);
+                        }
+
+                        if (task.IsCompletedSuccessfully())
+                        {
+                            TOut result = task.Result;
+                            return Task.FromResult(resultSelector(subItem, result));
+                        }
+                        else
+                        {
+                            return WaitAsync(task, resultSelector, subItem);
+                            static async Task<TRes> WaitAsync(Task<TOut> task, Func<TIn, TOut, TRes> resultSelector, TIn subItem)
+                            {
+                                TOut result = await task.ConfigureAwait(false);
+                                return resultSelector(subItem, result);
+                            }
+                        }
+                    }, func, subItem, resultSelector);
                 }
             }
 
             public IEnumerable<IAggregator<TRes>> Sub<TIn, TInherim, TRes>(
                 IEnumerable<TIn> subItems, 
                 Func<IParallelEnumerator<TIn>, IEnumerable<IAggregator<TInherim>>> aggregateFunc, 
-                Func<TIn, IList<TInherim>, TRes> resultSelector)
+                Func<TIn, IReadOnlyList<TInherim>, TRes> resultSelector)
             {
                 foreach (TIn subItem in subItems)
                 {
@@ -89,25 +138,24 @@
 
                     IAggregator<TInherim>[] aggs = aggregateFunc(en).ToArray();
 
-                    yield return CreateAggregator(static async t =>
+                    yield return CreateAggregator(static async (subItem, aggs, resultSelector) =>
                     {
-                        List<TInherim> outputs = new(t.aggs.Length);
-                        for (int i = 0; i < t.aggs.Length; i++)
+                        TInherim[] outputs = new TInherim[aggs.Length];
+                        for (int i = 0; i < aggs.Length; i++)
                         {
-                            var ag = t.aggs[i];
+                            var ag = aggs[i];
                             await ag.InvokeAsync().ConfigureAwait(false);
-                            outputs.Add(ag.Result);
+                            outputs[i] = ag.Result;
                         }
-                        return t.resultSelector(t.subItem, outputs);
-                    },
-                    state: (subItem, aggs, resultSelector));
+                        return resultSelector(subItem, outputs);
+                    }, subItem, aggs, resultSelector);
                 }
             }
         }
 
-        public static async Task<IList<TResult>> Transform<TInput, TOutput, TResult>(IEnumerable<TInput> items,
+        public static async Task<IReadOnlyList<TResult>> Transform<TInput, TOutput, TResult>(IEnumerable<TInput> items,
             Func<IParallelEnumerator<TInput>, IEnumerable<IAggregator<TOutput>>> func,
-            Func<TInput, IList<TOutput>, TResult> resultSelector,
+            Func<TInput, IReadOnlyList<TOutput>, TResult> resultSelector,
             int maxDegreeOfParallelism = -1)
         {
             List<TResult> list = new();
@@ -122,7 +170,7 @@
 
         public static async IAsyncEnumerable<TResult> EnumerateAsync<TInput, TOutput, TResult>(IEnumerable<TInput> items,
             Func<IParallelEnumerator<TInput>, IEnumerable<IAggregator<TOutput>>> func,
-            Func<TInput, IList<TOutput>, TResult> resultSelector,
+            Func<TInput, IReadOnlyList<TOutput>, TResult> resultSelector,
             int maxDegreeOfParallelism)
         {
             if (items is ICollection<TInput> col && col.Count == 0)
@@ -152,9 +200,10 @@
 
             for (int i = 0; i < itemsAgg.Count; i++)
             {
-                for (int j = 0; j < itemsAgg[i].Agg.Length; j++)
+                var item = itemsAgg[i];
+                for (int j = 0; j < item.Agg.Length; j++)
                 {
-                    if (!await actionBlock.SendAsync(itemsAgg[i].Agg[j]).ConfigureAwait(false))
+                    if (!await actionBlock.SendAsync(item.Agg[j]).ConfigureAwait(false))
                     // Произошла ошибка внутри конвейера.
                     {
                         // Извлекаем исключение.
@@ -179,29 +228,27 @@
             }
         }
 
-        public static async Task<IList<TResult>> Run<TInput, TOutput, TResult>(IEnumerable<TInput> items,
+        public static async Task<IReadOnlyList<TResult>> Run<TInput, TOutput, TResult>(IEnumerable<TInput> items,
             Func<TInput, Task<TOutput>> func,
             Func<TInput, TOutput, TResult> selector,
             int maxDegreeOfParallelism = -1,
             CancellationToken cancellationToken = default)
         {
-            return (await Run(items, func, maxDegreeOfParallelism, cancellationToken))
+            var outItems = await Run(items, func, maxDegreeOfParallelism, cancellationToken).ConfigureAwait(false);
+
+            return outItems
                 .Select(x => selector(x.Input, x.Output))
-                .ToList();
+                .ToArray();
         }
 
-        public static async Task<IList<(TInput Input, TOutput Output)>> Run<TInput, TOutput>(IEnumerable<TInput> items,
+        public static async Task<IReadOnlyList<(TInput Input, TOutput Output)>> Run<TInput, TOutput>(IEnumerable<TInput> items,
             Func<TInput, Task<TOutput>> func, int maxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
             CancellationToken cancellationToken = default)
         {
             if (items is ICollection<TInput> col && col.Count == 0)
                 return Array.Empty<(TInput Input, TOutput Output)>();
 
-            var transformBlock = new TransformBlock<TInput, (TInput, TOutput)>(async input =>
-            {
-                TOutput output = await func(input).ConfigureAwait(false);
-                return (input, output);
-            }, 
+            var transformBlock = new TransformBlock<TInput, (TInput, TOutput)>(input => RunTransform(func, input), 
             new ExecutionDataflowBlockOptions
             {
                 EnsureOrdered = false,
@@ -230,7 +277,7 @@
             if (resultBuffer.TryReceiveAll(out var outItems))
             {
                 await resultBuffer.Completion.ConfigureAwait(false);
-                return outItems;
+                return (IReadOnlyList<(TInput, TOutput)>)outItems;
             }
             else
             {
@@ -238,6 +285,33 @@
             }
         }
 
+        private static Task<(TInput, TOutput)> RunTransform<TInput, TOutput>(Func<TInput, Task<TOutput>> func, TInput input)
+        {
+            Task<TOutput> task;
+            try
+            {
+                task = func(input);
+            }
+            catch (Exception ex)
+            {
+                return Task.FromException<(TInput, TOutput)>(ex);
+            }
+
+            if (task.IsCompletedSuccessfully())
+            {
+                var output = task.Result;
+                return Task.FromResult((input, output));
+            }
+            else
+            {
+                return WaitAsync(task, input);
+                static async Task<(TInput, TOutput)> WaitAsync(Task<TOutput> task, TInput input)
+                {
+                    TOutput output = await task.ConfigureAwait(false);
+                    return (input, output);
+                }
+            }
+        }
 
         public static async Task Run<TInput>(IEnumerable<TInput> items,
             Func<TInput, Task> func, int maxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
@@ -265,11 +339,11 @@
             await actionBlock.Completion.ConfigureAwait(false);
         }
 
-        private static Aggregator<TOutput, TState> CreateAggregator<TOutput, TState>(
-            Func<TState, Task<TOutput>> func, 
-            TState state)
+        private static Aggregator<TOutput, TArg1, TArg2, TArg3> CreateAggregator<TOutput, TArg1, TArg2, TArg3>(
+            Func<TArg1, TArg2, TArg3, Task<TOutput>> func,
+            TArg1 arg1, TArg2 arg2, TArg3 arg3)
         {
-            return new Aggregator<TOutput, TState>(func, state);
+            return new Aggregator<TOutput, TArg1, TArg2, TArg3>(func, arg1, arg2, arg3);
         }
     }
 }

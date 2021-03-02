@@ -36,55 +36,55 @@ namespace TestApp
         /// Пользователь + Заказы.
         /// </summary>
         [DebuggerDisplay("Orders = {Orders.Count}")]
-        record User1(int UserId, IList<OrderDto> Orders);
+        record User1(int UserId, IReadOnlyList<OrderDto> Orders);
 
         /// <summary>
         /// Пользователь + Заказы + Товары.
         /// </summary>
         [DebuggerDisplay("Orders = {Orders.Count}")]
-        record User2(int UserId, IList<Order1> Orders);
+        record User2(int UserId, IReadOnlyList<Order1> Orders);
 
         /// <summary>
         /// Пользователь + Заказы + Товары + Свойства.
         /// </summary>
         [DebuggerDisplay("UserId = {UserId}, Orders = {Orders.Count}")]
-        record User3(int UserId, IList<Order2> Orders);
+        record User3(int UserId, IReadOnlyList<Order2> Orders);
 
         /// <summary>
         /// Пользователь + Заказы + Товары + Свойства + Значения_Свойств.
         /// </summary>
         [DebuggerDisplay("Orders = {Orders.Count}")]
-        record User4(int UserId, IList<Order3> Orders);
+        record User4(int UserId, IReadOnlyList<Order3> Orders);
 
         /// <summary>
         /// Заказ + Товары.
         /// </summary>
         [DebuggerDisplay("Products = {Products.Count}")]
-        record Order1(OrderDto Dto, IList<ProductDto> Products);
+        record Order1(OrderDto Dto, IReadOnlyList<ProductDto> Products);
 
         /// <summary>
         /// Заказ + Товары + Свойства.
         /// </summary>
         [DebuggerDisplay("Products = {Products.Count}")]
-        record Order2(OrderDto Dto, IList<Product1> Products);
+        record Order2(OrderDto Dto, IReadOnlyList<Product1> Products);
 
         /// <summary>
         /// Заказ + Товары + Свойства + Значения_Свойств.
         /// </summary>
         [DebuggerDisplay("Products = {Products.Count}")]
-        record Order3(OrderDto Dto, IList<Product2> Products);
+        record Order3(OrderDto Dto, IReadOnlyList<Product2> Products);
 
         /// <summary>
         /// Товар + Свойства.
         /// </summary>
         [DebuggerDisplay("Properties = {Properties.Count}")]
-        record Product1(ProductDto Dto, IList<PropertyDto> Properties);
+        record Product1(ProductDto Dto, IReadOnlyList<PropertyDto> Properties);
 
         /// <summary>
         /// Товар + Свойства + Значения_Свойств.
         /// </summary>
         [DebuggerDisplay("ProductName = {Dto.ProductName}, Properties = {Properties.Count}")]
-        record Product2(ProductDto Dto, IList<Property1> Properties);
+        record Product2(ProductDto Dto, IReadOnlyList<Property1> Properties);
 
         /// <summary>
         /// Свойство + Значение.
@@ -182,7 +182,9 @@ namespace TestApp
                 },
                 (Order, Products) => new Order3(Order.Dto, Products));
             },
-            (User, Orders) => new User4(User.UserId, Orders), maxDegreeOfParallelism: 10);
+            (User, Orders) => new User4(User.UserId, Orders), 
+            maxDegreeOfParallelism: 10);
+
 
             foreach (User4 user in users4)
             {
@@ -247,16 +249,16 @@ namespace TestApp
             }
         }
 
-        static async Task<IList<OrderDto>> GetOrders(int userId) => new List<OrderDto> 
+        static async Task<IReadOnlyList<OrderDto>> GetOrders(int userId) => new List<OrderDto> 
         { 
             new() { OrderId = 765, OrderName = "Заказ на 1 товар" } 
         };
-        static async Task<IList<ProductDto>> GetOrderProducts(long orderId) => new List<ProductDto>
+        static async Task<IReadOnlyList<ProductDto>> GetOrderProducts(long orderId) => new List<ProductDto>
         { 
             new() { ProductId = 876, ProductName = "Молоток" },
             new() { ProductId = 379, ProductName = "Пила" } 
         };
-        static async Task<IList<PropertyDto>> GetProductProperties(int productId) => new List<PropertyDto>
+        static async Task<IReadOnlyList<PropertyDto>> GetProductProperties(int productId) => new List<PropertyDto>
         { 
             new() { PropertyId = 876, PropertyName = "Объём" },
             new() { PropertyId = 987, PropertyName = "Вес" } 

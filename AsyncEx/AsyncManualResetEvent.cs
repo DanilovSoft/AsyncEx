@@ -21,7 +21,9 @@ namespace System.Threading
         {
             _tcs = new TaskCompletionSource<VoidStruct>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (isSet)
+            {
                 _tcs.TrySetResult(default);
+            }
         }
 
         public void Set()

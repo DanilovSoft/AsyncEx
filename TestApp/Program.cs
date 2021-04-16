@@ -14,9 +14,18 @@ namespace TestApp
     {
         static async Task Main()
         {
-            var mre = new ManualResetEventSlim(initialState: true);
-            mre.Wait(default(TimeSpan));
+            //var a = new ManualResetEventSlim(true);
 
+            //a.Wait(new CancellationToken(true));
+
+            var are = new AsyncAutoResetEvent(initialState: false);
+
+            //_ = Task.Delay(3000).ContinueWith(_ => are.Set());
+
+            var cts = new Can
+            await are.WaitAsync(5000);
+            
+            
             //var mre = new ManualResetValueTaskSourceCore<int>();
             //mre.Version
         }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,84 +9,179 @@ using System.Threading.Tasks.Sources;
 
 namespace DanilovSoft.AsyncEx
 {
-    public sealed class AsyncAutoResetEvent : INotifyCompletion
+    public sealed class AsyncAutoResetEvent
     {
-        // m_continuationObject is set to this when the task completes.
-        private static readonly object s_taskCompletionSentinel = new object();
+        private static readonly Task<bool> CompletedTrueTask = Task.FromResult(true);
+        private static readonly Task<bool> CompletedFalseTask = Task.FromResult(false);
+        private readonly Queue<QueueAwaiter> _awaiters = new();
+        private bool _signaled;
 
-        // Can be null, a single continuation, a list of continuations, or s_taskCompletionSentinel,
-        // in that order. The logic arround this object assumes it will never regress to a previous state.
-        private volatile object? m_continuationObject = null;
-
-        private int _state;
+        public AsyncAutoResetEvent() : this(initialState: false) { }
 
         public AsyncAutoResetEvent(bool initialState)
         {
-            
+            _signaled = initialState;
         }
 
-        public ValueTask<bool> WaitOneAsync()
-        {
-            if (Interlocked.CompareExchange(ref _state, 0, 1) == 1)
-            // Забрали сигнал.
-            {
-                return new ValueTask<bool>(result: true);
-            }
-            else
-            // Сигнал занят — нужно ждать.
-            {
-                Task<bool> task = WaitForSignalAsync();
-                return new ValueTask<bool>(task);
-            }
-        }
-
-        private async Task<bool> WaitForSignalAsync()
-        {
-            return await this;
-        }
-
-        private void ResetSignal()
-        {
-            
-        }
+        public bool IsSet { get => throw new NotImplementedException(); }
 
         public void Set()
         {
-            // Должны разбудить один ожидающий await если он есть.
-            
-
-            
-        }
-
-        public bool Reset()
-        {
-            return default;
-        }
-
-        internal AsyncAutoResetEvent GetAwaiter() => this;
-        internal bool IsCompleted { get; }
-
-        void INotifyCompletion.OnCompleted(Action continuation)
-        {
-            // Try to just jam tc into m_continuationObject
-            if ((m_continuationObject != null) || (Interlocked.CompareExchange(ref m_continuationObject, continuation, null) != null))
+            lock (_awaiters)
             {
-                // If we get here, it means that we failed to CAS tc into m_continuationObject.
-                // Therefore, we must go the more complicated route.
-                AddTaskContinuationComplex(continuation);
-
-                //ExecutionContext.Capture()
+                if (_awaiters.TryDequeue(out var awaiter))
+                {
+                    awaiter.TrySet();
+                }
+                else
+                {
+                    _signaled = true;
+                }
             }
         }
 
-        private void AddTaskContinuationComplex(Action continuation)
+        public void Reset()
         {
 
         }
 
-        internal bool GetResult()
+        [DebuggerStepThrough]
+        public Task WaitAsync()
         {
-            throw new NotImplementedException();
+            return WaitAsync(CancellationToken.None);
+        }
+
+        /// <exception cref="ArgumentOutOfRangeException"/>
+        [DebuggerStepThrough]
+        public Task<bool> WaitAsync(int millisecondsTimeout)
+        {
+            return WaitAsync(millisecondsTimeout, CancellationToken.None);
+        }
+
+        /// <exception cref="ArgumentOutOfRangeException"/>
+        [DebuggerStepThrough]
+        public Task<bool> WaitAsync(TimeSpan timeout)
+        {
+            return WaitAsync(timeout, CancellationToken.None);
+        }
+
+        /// <exception cref="OperationCanceledException"/>
+        /// <exception cref="ArgumentOutOfRangeException"/>
+        [DebuggerStepThrough]
+        public Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            long totalMilliseconds = (long)timeout.TotalMilliseconds;
+            if (totalMilliseconds < -1 || totalMilliseconds > int.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(timeout));
+            }
+
+            return WaitAsync((int)totalMilliseconds, cancellationToken);
+        }
+
+        /// <exception cref="OperationCanceledException"/>
+        [DebuggerStepThrough]
+        public Task WaitAsync(CancellationToken cancellationToken)
+        {
+            return WaitAsync(Timeout.Infinite, cancellationToken);
+        }
+
+        /// <exception cref="ArgumentOutOfRangeException"/>
+        /// <exception cref="OperationCanceledException"/>
+        public Task<bool> WaitAsync(int millisecondsTimeout, CancellationToken cancellationToken)
+        {
+            if (millisecondsTimeout < -1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(millisecondsTimeout));
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return Task.FromCanceled<bool>(cancellationToken);
+            }
+
+            lock (_awaiters)
+            {
+                if (_signaled)
+                {
+                    _signaled = false;
+                    return CompletedTrueTask;
+                }
+                else
+                // Становимся в очередь на получение сигнала.
+                {
+                    if (millisecondsTimeout > 0)
+                    {
+                        var item = new QueueAwaiter(millisecondsTimeout, cancellationToken);
+                        _awaiters.Enqueue(item);
+                        return item.Task;
+                    }
+                    else
+                    {
+                        return CompletedFalseTask;
+                    }
+                }
+            }
+        }
+
+        private sealed class QueueAwaiter
+        {
+            private readonly TaskCompletionSource<bool> _tcs;
+            private readonly CancellationTokenRegistration _canc;
+            private readonly CancellationToken _cancellationToken;
+            private Timer _timer;
+
+            public QueueAwaiter(int millisecondsTimeout, CancellationToken cancellationToken)
+            {
+                Debug.Assert(millisecondsTimeout > 0);
+
+                _cancellationToken = cancellationToken;
+                _tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                
+                // Может сработать сразу.
+                var timer = new Timer(static state => ((QueueAwaiter)state!).TrySetTimeout(), this, Timeout.Infinite, Timeout.Infinite);
+                _timer = timer;
+
+                // Может сработать сразу.
+                _canc = cancellationToken.Register(static state => ((QueueAwaiter)state!).TryCancel(), this, useSynchronizationContext: false);
+                if (_tcs.Task.IsCompleted)
+                {
+                    _canc.Dispose();
+                    timer.Dispose();
+                }
+            }
+
+            public Task<bool> Task => _tcs.Task;
+
+            public void TrySet()
+            {
+                if (_tcs.TrySetResult(true))
+                {
+                    Cleanup();
+                }
+            }
+
+            private void Cleanup()
+            {
+                _timer?.Dispose();
+                _canc.Dispose(); // можно диспозить несколько раз.
+            }
+
+            private void TrySetTimeout()
+            {
+                if (_tcs.TrySetResult(false))
+                {
+                    Cleanup();
+                }
+            }
+
+            private void TryCancel()
+            {
+                if (_tcs.TrySetCanceled(_cancellationToken))
+                {
+                    Cleanup();
+                }
+            }
         }
     }
 }

@@ -77,6 +77,23 @@
             Сколько потоков (тасков) ожидают блокировку.
             </summary>
         </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncAutoResetEvent.WaitAsync(System.Int32)">
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncAutoResetEvent.WaitAsync(System.TimeSpan)">
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncAutoResetEvent.WaitAsync(System.TimeSpan,System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncAutoResetEvent.WaitAsync(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncAutoResetEvent.WaitAsync(System.Int32,System.Threading.CancellationToken)">
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
         <member name="T:DanilovSoft.AsyncEx.LazyAsync`1">
             <summary>
             Provides support for asynchronous lazy initialization. This type is fully threadsafe.
@@ -161,6 +178,23 @@
             </summary>
             <returns></returns>
             <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.ManualResetEventAsync.WaitAsync(System.Int32)">
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.ManualResetEventAsync.WaitAsync(System.TimeSpan)">
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.ManualResetEventAsync.WaitAsync(System.TimeSpan,System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.ManualResetEventAsync.WaitAsync(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.ManualResetEventAsync.WaitAsync(System.Int32,System.Threading.CancellationToken)">
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <exception cref="T:System.OperationCanceledException"/>
         </member>
         <member name="T:DanilovSoft.AsyncEx.ParallelTransform">
             <summary>

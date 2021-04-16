@@ -96,6 +96,29 @@ namespace TestApp
         {
             int[] userIds = new[] { 1, 2, 3 };
 
+            #region Способ 1
+
+            List<string> list = new();
+            foreach (int id in userIds)
+            {
+                string name = await GetName(id);
+                list.Add(name);
+            }
+            #endregion
+
+
+            #region Способ 2
+
+            var names = await ParallelTransform.Run(userIds, GetName, 10);
+            #endregion
+
+
+
+
+
+
+
+
             // Для каждого пользователя получим коллекцию заказов.
             var users = await ParallelTransform.Run(userIds, GetOrders,
                 (UserId, Orders) => new User1(UserId, Orders), 
@@ -248,6 +271,8 @@ namespace TestApp
                 }
             }
         }
+
+        static async Task<string> GetName(int userId) => userId.ToString();
 
         static async Task<IReadOnlyList<OrderDto>> GetOrders(int userId) => new List<OrderDto> 
         { 

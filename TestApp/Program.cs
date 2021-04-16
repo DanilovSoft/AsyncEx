@@ -18,12 +18,17 @@ namespace TestApp
 
             //a.Wait(new CancellationToken(true));
 
+            var a = new AutoResetEvent(true);
+            a.Reset();
+
+
             var are = new AsyncAutoResetEvent(initialState: false);
 
-            //_ = Task.Delay(3000).ContinueWith(_ => are.Set());
+            _ = Task.Delay(3000).ContinueWith(_ => are.Set());
 
-            var cts = new Can
-            await are.WaitAsync(5000);
+            var t1 = are.WaitAsync(100);
+            Thread.Sleep(200);
+            await are.WaitAsync();
             
             
             //var mre = new ManualResetValueTaskSourceCore<int>();

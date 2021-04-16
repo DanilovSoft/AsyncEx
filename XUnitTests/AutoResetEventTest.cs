@@ -9,8 +9,9 @@ using Xunit;
 
 namespace XUnitTests
 {
-    public class AsyncAutoResetEventTest
+    public class AutoResetEventTest
     {
+        [Fact]
         public async Task Release()
         {
             var a = new AsyncAutoResetEvent();
@@ -20,6 +21,7 @@ namespace XUnitTests
             await a.WaitAsync();
         }
 
+        [Fact]
         public async Task TimedOut()
         {
             var a = new AsyncAutoResetEvent();
@@ -28,6 +30,7 @@ namespace XUnitTests
             Assert.False(timedout);
         }
 
+        [Fact]
         public async Task NotTimedOut()
         {
             var a = new AsyncAutoResetEvent();
@@ -38,6 +41,7 @@ namespace XUnitTests
             Assert.True(timedout);
         }
 
+        [Fact]
         public async Task DelayCanceled()
         {
             var a = new AsyncAutoResetEvent();
@@ -55,6 +59,7 @@ namespace XUnitTests
             Assert.True(false);
         }
 
+        [Fact]
         public async Task DelayCanceled2()
         {
             var a = new AsyncAutoResetEvent();

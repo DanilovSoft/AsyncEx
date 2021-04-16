@@ -9,40 +9,44 @@ using System.Threading.Tasks.Sources;
 
 namespace DanilovSoft.AsyncEx
 {
+    [DebuggerDisplay("IsSet = {IsSet}")]
+    [DebuggerTypeProxy(typeof(DebugView))]
     public sealed class AsyncAutoResetEvent
     {
         private static readonly Task<bool> CompletedTrueTask = Task.FromResult(true);
         private static readonly Task<bool> CompletedFalseTask = Task.FromResult(false);
         private readonly Queue<QueueAwaiter> _awaiters = new();
-        private bool _signaled;
+        private bool _set;
 
         public AsyncAutoResetEvent() : this(initialState: false) { }
 
         public AsyncAutoResetEvent(bool initialState)
         {
-            _signaled = initialState;
+            _set = initialState;
         }
 
-        public bool IsSet { get => throw new NotImplementedException(); }
+        public bool IsSet { get => Volatile.Read(ref _set); }
 
         public void Set()
         {
+            // Должны или отпустить один из ожидающих Task либо установить сигнальное состояние.
             lock (_awaiters)
             {
+                skip:
                 if (_awaiters.TryDequeue(out var awaiter))
                 {
-                    awaiter.TrySet();
+                    if (!awaiter.TrySet())
+                    {
+                        // Редкий случай когда проигрываем гонку с отменой.
+                        goto skip;
+                    }
                 }
                 else
                 {
-                    _signaled = true;
+                    // Больше нет потоков ожидающих сигнал.
+                    _set = true;
                 }
             }
-        }
-
-        public void Reset()
-        {
-
         }
 
         [DebuggerStepThrough]
@@ -102,17 +106,17 @@ namespace DanilovSoft.AsyncEx
 
             lock (_awaiters)
             {
-                if (_signaled)
+                if (_set)
                 {
-                    _signaled = false;
+                    _set = false;
                     return CompletedTrueTask;
                 }
                 else
                 // Становимся в очередь на получение сигнала.
                 {
-                    if (millisecondsTimeout > 0)
+                    if (millisecondsTimeout != 0)
                     {
-                        var item = new QueueAwaiter(millisecondsTimeout, cancellationToken);
+                        var item = new QueueAwaiter(this, millisecondsTimeout, cancellationToken);
                         _awaiters.Enqueue(item);
                         return item.Task;
                     }
@@ -124,40 +128,60 @@ namespace DanilovSoft.AsyncEx
             }
         }
 
+        private void OnAwaiterCancels(QueueAwaiter awaiter)
+        {
+            lock (_awaiters)
+            {
+                // PS: в редком случае, метод Set мог обогнать и уже удалить из коллекции.
+                _awaiters.Remove(awaiter);
+            }
+        }
+
         private sealed class QueueAwaiter
         {
             private readonly TaskCompletionSource<bool> _tcs;
             private readonly CancellationTokenRegistration _canc;
+            private readonly AsyncAutoResetEvent _are;
             private readonly CancellationToken _cancellationToken;
-            private Timer _timer;
+            private readonly Timer? _timer;
 
-            public QueueAwaiter(int millisecondsTimeout, CancellationToken cancellationToken)
+            public QueueAwaiter(AsyncAutoResetEvent are, int millisecondsTimeout, CancellationToken cancellationToken)
             {
-                Debug.Assert(millisecondsTimeout > 0);
-
+                _are = are;
                 _cancellationToken = cancellationToken;
                 _tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-                
-                // Может сработать сразу.
-                var timer = new Timer(static state => ((QueueAwaiter)state!).TrySetTimeout(), this, Timeout.Infinite, Timeout.Infinite);
-                _timer = timer;
 
-                // Может сработать сразу.
-                _canc = cancellationToken.Register(static state => ((QueueAwaiter)state!).TryCancel(), this, useSynchronizationContext: false);
+                if (millisecondsTimeout > 0)
+                {
+                    // Может сработать сразу.
+                    _timer = new Timer(static state => ((QueueAwaiter)state!).TrySetTimeout(), this, millisecondsTimeout, Timeout.Infinite);
+                }
+
+                if (cancellationToken.CanBeCanceled)
+                {
+                    // Может сработать сразу в текущем потоке.
+                    _canc = cancellationToken.UnsafeRegister(static state => ((QueueAwaiter)state!).TryCancel(), this);
+                }
+
                 if (_tcs.Task.IsCompleted)
                 {
                     _canc.Dispose();
-                    timer.Dispose();
+                    _timer?.Dispose();
                 }
             }
 
             public Task<bool> Task => _tcs.Task;
 
-            public void TrySet()
+            public bool TrySet()
             {
                 if (_tcs.TrySetResult(true))
                 {
                     Cleanup();
+                    return true;
+                }
+                else
+                {
+                    return false;
                 }
             }
 
@@ -172,6 +196,7 @@ namespace DanilovSoft.AsyncEx
                 if (_tcs.TrySetResult(false))
                 {
                     Cleanup();
+                    _are.OnAwaiterCancels(this);
                 }
             }
 
@@ -180,8 +205,24 @@ namespace DanilovSoft.AsyncEx
                 if (_tcs.TrySetCanceled(_cancellationToken))
                 {
                     Cleanup();
+                    _are.OnAwaiterCancels(this);
                 }
             }
+        }
+
+        [DebuggerNonUserCode]
+        private sealed class DebugView
+        {
+            private readonly AsyncAutoResetEvent _are;
+
+            public DebugView(AsyncAutoResetEvent are)
+            {
+                _are = are;
+            }
+
+            public bool IsSet => _are.IsSet;
+
+            public int WaitQueueCount => _are._awaiters.Count;
         }
     }
 }

@@ -35,20 +35,20 @@
     /// </summary>
     public sealed class ParallelTransform
     {
-        private sealed class Aggregator<TOutput, TArg1, TArg2, TArg3> : IAggregator<TOutput>
+        private sealed class Aggregator<TOutput, TFunc, TSubItem, TSelector> : IAggregator<TOutput>
         {
-            private readonly Func<TArg1, TArg2, TArg3, Task<TOutput>> _asyncFunc;
+            private readonly Func<TFunc, TSubItem, TSelector, Task<TOutput>> _asyncFunc;
             public TOutput Result { get; private set; } = default!;
-            private readonly TArg1 _arg1;
-            private readonly TArg2 _arg2;
-            private readonly TArg3 _arg3;
+            private readonly TFunc _subFunc;
+            private readonly TSubItem _subItem;
+            private readonly TSelector _selector;
 
-            internal Aggregator(Func<TArg1, TArg2, TArg3, Task<TOutput>> func, TArg1 arg1, TArg2 arg2, TArg3 arg3)
+            internal Aggregator(Func<TFunc, TSubItem, TSelector, Task<TOutput>> func, TFunc subFunc, TSubItem subItem, TSelector selector)
             {
                 _asyncFunc = func;
-                _arg1 = arg1;
-                _arg2 = arg2;
-                _arg3 = arg3;
+                _subFunc = subFunc;
+                _subItem = subItem;
+                _selector = selector;
             }
 
             public Task InvokeAsync()
@@ -56,7 +56,7 @@
                 Task<TOutput> task;
                 try
                 {
-                    task = _asyncFunc(_arg1, _arg2, _arg3);
+                    task = _asyncFunc(_subFunc, _subItem, _selector);
                 }
                 catch (Exception ex)
                 {
@@ -71,8 +71,7 @@
                 else
                 {
                     return WaitAsync(task, this);
-
-                    static async Task WaitAsync(Task<TOutput> task, Aggregator<TOutput, TArg1, TArg2, TArg3> self)
+                    static async Task WaitAsync(Task<TOutput> task, Aggregator<TOutput, TFunc, TSubItem, TSelector> self)
                     {
                         self.Result = await task.ConfigureAwait(false);
                     }
@@ -272,6 +271,7 @@
                 }
             }
             transformBlock.Complete();
+
             await transformBlock.Completion.ConfigureAwait(false);
 
             if (resultBuffer.TryReceiveAll(out var outItems))
@@ -339,11 +339,11 @@
             await actionBlock.Completion.ConfigureAwait(false);
         }
 
-        private static Aggregator<TOutput, TArg1, TArg2, TArg3> CreateAggregator<TOutput, TArg1, TArg2, TArg3>(
-            Func<TArg1, TArg2, TArg3, Task<TOutput>> func,
-            TArg1 arg1, TArg2 arg2, TArg3 arg3)
+        private static Aggregator<TOutput, TFunc, TSubItem, TSelector> CreateAggregator<TOutput, TFunc, TSubItem, TSelector>(
+            Func<TFunc, TSubItem, TSelector, Task<TOutput>> func,
+            TFunc subFunc, TSubItem subItem, TSelector selector)
         {
-            return new Aggregator<TOutput, TArg1, TArg2, TArg3>(func, arg1, arg2, arg3);
+            return new Aggregator<TOutput, TFunc, TSubItem, TSelector>(func, subFunc, subItem, selector);
         }
     }
 }

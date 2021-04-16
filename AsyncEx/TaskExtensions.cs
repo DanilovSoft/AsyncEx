@@ -1,6 +1,7 @@
 ﻿using DanilovSoft.Threading;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -71,6 +72,8 @@ namespace DanilovSoft.Threading.Tasks
         //            }
         //        }
         //#endif
+
+        [DebuggerStepThrough]
         public static bool IsCompletedSuccessfully(this Task task)
         {
 #if NETSTANDARD2_0

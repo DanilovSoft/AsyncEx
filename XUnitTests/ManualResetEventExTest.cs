@@ -1,21 +1,21 @@
-﻿using DanilovSoft.AsyncEx;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DanilovSoft.AsyncEx;
 using Xunit;
 
 namespace XUnitTests
 {
-    public class AutoResetEventTest
+    public class ManualResetEventExTest
     {
         [Fact]
         public async Task Release()
         {
-            var a = new AsyncAutoResetEvent();
+            var a = new AsyncManualResetEventEx();
 
             _ = Task.Delay(2000).ContinueWith(_ => a.Set());
 
@@ -28,7 +28,7 @@ namespace XUnitTests
         [Fact]
         public async Task TimedOut()
         {
-            var a = new AsyncAutoResetEvent();
+            var a = new AsyncManualResetEventEx();
 
             var sw = Stopwatch.StartNew();
             bool success = await a.WaitAsync(1000);
@@ -40,7 +40,7 @@ namespace XUnitTests
         [Fact]
         public async Task NotTimedOut()
         {
-            var a = new AsyncAutoResetEvent();
+            var a = new AsyncManualResetEventEx();
 
             _ = Task.Delay(500).ContinueWith(_ => a.Set());
 
@@ -54,7 +54,7 @@ namespace XUnitTests
         [Fact]
         public async Task DelayedCancel()
         {
-            var a = new AsyncAutoResetEvent();
+            var a = new AsyncManualResetEventEx();
 
             using var cts = new CancellationTokenSource(1000);
 
@@ -75,7 +75,7 @@ namespace XUnitTests
         [Fact]
         public async Task DelayedCancelWithTimeout()
         {
-            var a = new AsyncAutoResetEvent();
+            var a = new AsyncManualResetEventEx();
 
             using var cts = new CancellationTokenSource(1000);
 
@@ -96,7 +96,7 @@ namespace XUnitTests
         [Fact]
         public async Task DelayedCancelTimedOut()
         {
-            var a = new AsyncAutoResetEvent();
+            var a = new AsyncManualResetEventEx();
 
             using var cts = new CancellationTokenSource(1000);
 

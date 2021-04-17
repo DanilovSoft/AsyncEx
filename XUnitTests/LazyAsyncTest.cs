@@ -13,7 +13,8 @@ namespace XUnitTests
         public async Task Test1()
         {
             var lazy = new LazyAsync<int>(PauseAsync);
-            
+            int value = await lazy.GetValueAsync();
+            Assert.Equal(123, value);
         }
 
         private async Task<int> PauseAsync()

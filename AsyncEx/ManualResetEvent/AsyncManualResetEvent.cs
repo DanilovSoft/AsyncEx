@@ -1,20 +1,13 @@
-﻿using DanilovSoft;
-using DanilovSoft.AsyncEx;
-using DanilovSoft.Threading.Tasks;
-using System;
-using System.Collections.Generic;
+﻿using DanilovSoft.Threading.Tasks;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Sources;
 
-namespace System.Threading
+namespace DanilovSoft.AsyncEx
 {
     [DebuggerDisplay(@"\{IsSet = {IsSet}\}")]
     public sealed class AsyncManualResetEvent
     {
-        public bool IsSet => _tcs.Task.IsCompleted;
         private volatile TaskCompletionSource<VoidStruct> _tcs;
 
         public AsyncManualResetEvent(bool isSet)
@@ -25,6 +18,8 @@ namespace System.Threading
                 _tcs.TrySetResult(default);
             }
         }
+
+        public bool IsSet => _tcs.Task.IsCompleted;
 
         public void Set()
         {
@@ -43,8 +38,11 @@ namespace System.Threading
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueTask WaitAsync() => WaitAsync(default);
+        [DebuggerStepThrough]
+        public ValueTask WaitAsync()
+        {
+            return WaitAsync(CancellationToken.None);
+        }
 
         public ValueTask WaitAsync(CancellationToken cancellationToken)
         {
@@ -57,6 +55,7 @@ namespace System.Threading
             }
             else
             {
+                // TODO можно убрать 'async'.
                 return new ValueTask(tcs.Task.WaitAsync(cancellationToken));
             }
         }

@@ -1,48 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Sources;
 
 namespace DanilovSoft.AsyncEx
 {
     [DebuggerDisplay("IsSet = {IsSet}")]
     [DebuggerTypeProxy(typeof(DebugView))]
-    public sealed class AsyncAutoResetEvent
+    public sealed class AsyncManualResetEventEx
     {
         private readonly Queue<QueueAwaiter> _awaiters = new();
         private bool _set;
 
-        public AsyncAutoResetEvent() : this(initialState: false) { }
-
-        public AsyncAutoResetEvent(bool initialState)
+        public AsyncManualResetEventEx() : this(initialState: false)
         {
-            _set = initialState;
+
+        }
+
+        public AsyncManualResetEventEx(bool initialState)
+        {
+
         }
 
         public bool IsSet => Volatile.Read(ref _set);
 
         public void Set()
         {
-            // Должны или отпустить один из ожидающих Task либо установить сигнальное состояние.
+            // Должны отпустить все ожидающие Task и установить сигнальное состояние.
             lock (_awaiters)
             {
-                skip:
-                if (_awaiters.TryDequeue(out var awaiter))
+                _set = true;
+                while (_awaiters.TryDequeue(out var awaiter))
                 {
-                    if (!awaiter.TrySet())
-                    {
-                        // Редкий случай когда проигрываем гонку с отменой.
-                        goto skip;
-                    }
-                }
-                else
-                {
-                    // Больше нет потоков ожидающих сигнал.
-                    _set = true;
+                    awaiter.TrySet();
                 }
             }
         }
@@ -58,7 +50,7 @@ namespace DanilovSoft.AsyncEx
         [DebuggerStepThrough]
         public Task WaitAsync()
         {
-            return WaitAsync(CancellationToken.None);
+            return WaitAsync(Timeout.Infinite, CancellationToken.None);
         }
 
         /// <exception cref="ArgumentOutOfRangeException"/>
@@ -74,7 +66,7 @@ namespace DanilovSoft.AsyncEx
         {
             return WaitAsync(timeout, CancellationToken.None);
         }
-
+        
         /// <exception cref="OperationCanceledException"/>
         /// <exception cref="ArgumentOutOfRangeException"/>
         [DebuggerStepThrough]
@@ -114,7 +106,6 @@ namespace DanilovSoft.AsyncEx
             {
                 if (_set)
                 {
-                    _set = false;
                     return GlobalVars.CompletedTrueTask;
                 }
                 else
@@ -145,17 +136,17 @@ namespace DanilovSoft.AsyncEx
 
         private sealed class QueueAwaiter
         {
-            private readonly AsyncAutoResetEvent _are;
+            private readonly AsyncManualResetEventEx _mre;
             private readonly TaskCompletionSource<bool> _tcs;
             private readonly CancellationTokenRegistration _canc;
             private readonly CancellationToken _cancellationToken;
             private readonly Timer? _timer;
 
-            public QueueAwaiter(AsyncAutoResetEvent are, int millisecondsTimeout, CancellationToken cancellationToken)
+            public QueueAwaiter(AsyncManualResetEventEx mre, int millisecondsTimeout, CancellationToken cancellationToken)
             {
                 Debug.Assert(millisecondsTimeout != 0);
 
-                _are = are;
+                _mre = mre;
                 _cancellationToken = cancellationToken;
                 _tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -203,7 +194,7 @@ namespace DanilovSoft.AsyncEx
                 if (_tcs.TrySetResult(false))
                 {
                     Cleanup();
-                    _are.OnAwaiterCancels(this);
+                    _mre.OnAwaiterCancels(this);
                 }
             }
 
@@ -212,7 +203,7 @@ namespace DanilovSoft.AsyncEx
                 if (_tcs.TrySetCanceled(_cancellationToken))
                 {
                     Cleanup();
-                    _are.OnAwaiterCancels(this);
+                    _mre.OnAwaiterCancels(this);
                 }
             }
 
@@ -226,16 +217,16 @@ namespace DanilovSoft.AsyncEx
         [DebuggerNonUserCode]
         private sealed class DebugView
         {
-            private readonly AsyncAutoResetEvent _are;
+            private readonly AsyncManualResetEventEx _mre;
 
-            public DebugView(AsyncAutoResetEvent are)
+            public DebugView(AsyncManualResetEventEx mre)
             {
-                _are = are;
+                _mre = mre;
             }
 
-            public bool IsSet => _are.IsSet;
+            public bool IsSet => _mre.IsSet;
 
-            public int WaitQueueCount => _are._awaiters.Count;
+            public int WaitQueueCount => _mre._awaiters.Count;
         }
     }
 }

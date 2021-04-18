@@ -39,25 +39,18 @@ namespace DanilovSoft.AsyncEx
         }
 
         [DebuggerStepThrough]
-        public ValueTask WaitAsync()
+        public Task WaitAsync()
         {
             return WaitAsync(CancellationToken.None);
         }
 
-        public ValueTask WaitAsync(CancellationToken cancellationToken)
+        public Task WaitAsync(CancellationToken cancellationToken)
         {
             // Копия volatile.
             var tcs = _tcs;
 
-            if (tcs.Task.IsCompleted)
-            {
-                return new ValueTask();
-            }
-            else
-            {
-                // TODO можно убрать 'async'.
-                return new ValueTask(tcs.Task.WaitAsync(cancellationToken));
-            }
+            // TODO можно убрать 'async'.
+            return tcs.Task.WaitAsync(cancellationToken);
         }
     }
 }

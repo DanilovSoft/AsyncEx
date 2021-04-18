@@ -18,7 +18,7 @@ namespace DanilovSoft.Threading.Tasks
         /// <exception cref="OperationCanceledException"/>
         public static Task WaitAsync(this Task task, CancellationToken cancellationToken)
         {
-            if (cancellationToken.CanBeCanceled)
+            if (cancellationToken.CanBeCanceled && !task.IsCompleted)
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {

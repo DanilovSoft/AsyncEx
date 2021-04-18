@@ -113,7 +113,7 @@ namespace DanilovSoft.AsyncEx
                 {
                     if (millisecondsTimeout != 0)
                     {
-                        var item = new QueueAwaiter(OnAwaiterCancels, millisecondsTimeout, cancellationToken);
+                        var item = new QueueAwaiter(_awaiters, millisecondsTimeout, cancellationToken);
                         _awaiters.Enqueue(item);
                         return item.Task;
                     }
@@ -122,15 +122,6 @@ namespace DanilovSoft.AsyncEx
                         return GlobalVars.CompletedFalseTask;
                     }
                 }
-            }
-        }
-
-        private void OnAwaiterCancels(QueueAwaiter awaiter)
-        {
-            lock (_awaiters)
-            {
-                // PS: в редком случае, метод Set мог обогнать и уже удалить из коллекции.
-                _awaiters.Remove(awaiter);
             }
         }
 

@@ -12,16 +12,17 @@ namespace DanilovSoft.AsyncEx
     public sealed class ManualResetEventSource<T>
     {
         private const string ConsistencyError = "Can't Take before Reset";
-        private string DebugDisplay => _state.ToString();
-        private readonly object _syncObj = new object();
+        private readonly object _syncObj = new();
         private volatile State _state = State.NoItem;
-        [MaybeNull, AllowNull]
-        private T _item = default;
+        //[MaybeNull, AllowNull]
+        private T? _item = default;
 
         public ManualResetEventSource()
         {
 
         }
+
+        private string DebugDisplay => _state.ToString();
 
         public void Reset()
         {
@@ -150,7 +151,7 @@ namespace DanilovSoft.AsyncEx
         [return: MaybeNull]
         public T Wait()
         {
-            Wait(Timeout.InfiniteTimeSpan, out T item);
+            Wait(Timeout.InfiniteTimeSpan, out T? item);
             return item;
         }
 

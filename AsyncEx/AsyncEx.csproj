@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net5.0;netcoreapp3.0;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.0</TargetFrameworks>
 		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
@@ -11,7 +11,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyOriginatorKeyFile>DanilovSoft.AsyncEx.pfx</AssemblyOriginatorKeyFile>
 		<Configurations>Debug;Release;Debug-Work</Configurations>
-		<Version>1.7.4</Version>
+		<Version>1.7.5</Version>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Authors>Vitalii Danilov</Authors>
 		<DocumentationFile>DanilovSoft.AsyncEx.xml</DocumentationFile>

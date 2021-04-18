@@ -173,10 +173,6 @@
             <exception cref="T:System.InvalidOperationException"/>
         </member>
         <member name="M:DanilovSoft.AsyncEx.ManualResetEventSource`1.Wait">
-            <summary>
-            
-            </summary>
-            <returns></returns>
             <exception cref="T:System.InvalidOperationException"/>
         </member>
         <member name="M:DanilovSoft.AsyncEx.AsyncManualResetEventEx.WaitAsync(System.Int32)">

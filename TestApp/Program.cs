@@ -14,17 +14,7 @@ namespace TestApp
     {
         static async Task Main()
         {
-            var mre = new AsyncManualResetEventEx(initialState: false);
-
-            //_ = Task.Delay(3000).ContinueWith(_ => are.Set());
-
-            //var t1 = are.WaitAsync(1);
-            //Thread.Sleep(200);
-            //await are.WaitAsync();
             
-            
-            //var mre = new ManualResetValueTaskSourceCore<int>();
-            //mre.Version
         }
     }
 }

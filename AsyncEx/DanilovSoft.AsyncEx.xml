@@ -65,7 +65,7 @@
             <summary>
             Очередь ожидающий потоков (тасков) претендующих на захват блокировки.
             </summary>
-            <remarks>Доступ только через блокировку <see cref="!:_context._syncObj"/>.</remarks>
+            <remarks>Доступ только через блокировку <see cref="F:DanilovSoft.AsyncEx.AsyncLock._syncObj"/>.</remarks>
         </member>
         <member name="M:DanilovSoft.AsyncEx.AsyncLock.WaitQueue.EnqueueAndWait">
             <summary>
@@ -169,12 +169,6 @@
             </summary>
             <remarks>Потокобезопасно.</remarks>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.ManualResetEventSource`1.Wait(System.TimeSpan,`0@)">
-            <exception cref="T:System.InvalidOperationException"/>
-        </member>
-        <member name="M:DanilovSoft.AsyncEx.ManualResetEventSource`1.Wait">
-            <exception cref="T:System.InvalidOperationException"/>
-        </member>
         <member name="M:DanilovSoft.AsyncEx.AsyncManualResetEventEx.WaitAsync(System.Int32)">
             <exception cref="T:System.ArgumentOutOfRangeException"/>
         </member>
@@ -191,6 +185,22 @@
         <member name="M:DanilovSoft.AsyncEx.AsyncManualResetEventEx.WaitAsync(System.Int32,System.Threading.CancellationToken)">
             <exception cref="T:System.ArgumentOutOfRangeException"/>
             <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="T:DanilovSoft.AsyncEx.ManualResetEventSource`1">
+            <summary>
+            Позволяет по запросу обмениваться объектами между потоками.
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.ManualResetEventSource`1.TryTake(`0@)">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.ManualResetEventSource`1.Wait(System.TimeSpan,`0@)">
+            <returns>False если за отведённое время не получили объект от другого потока.</returns>
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.ManualResetEventSource`1.Wait">
+            <exception cref="T:System.InvalidOperationException"/>
         </member>
         <member name="T:DanilovSoft.AsyncEx.ParallelTransform">
             <summary>

@@ -67,7 +67,7 @@ namespace DanilovSoft.AsyncEx
 
                     Debug.Assert(_tasks.First != null, "Нарушение логики работы планировщика");
 
-                    task = _tasks.First.Value;
+                    task = _tasks.First!.Value;
                     _tasks.RemoveFirst();
                 }
 

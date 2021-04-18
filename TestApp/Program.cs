@@ -14,7 +14,8 @@ namespace TestApp
     {
         static async Task Main()
         {
-            
+            var are = new AsyncAutoResetEvent();
+            await are.WaitAsync();
         }
     }
 }

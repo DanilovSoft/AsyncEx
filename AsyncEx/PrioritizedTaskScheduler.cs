@@ -52,17 +52,10 @@ namespace DanilovSoft.AsyncEx
         {
 #if NETCOREAPP3_1
             // TODO проверить уместность preferLocal.
-            ThreadPool.UnsafeQueueUserWorkItem(ThreadStaticEntry, this, preferLocal: true);
+            ThreadPool.UnsafeQueueUserWorkItem(static state => ((PrioritizedTaskScheduler)state).ThreadEntry(), this, preferLocal: true);
 #else
-            ThreadPool.UnsafeQueueUserWorkItem(ThreadStaticEntry, this);
+            ThreadPool.UnsafeQueueUserWorkItem(static state => ((PrioritizedTaskScheduler)state!).ThreadEntry(), this);
 #endif
-        }
-
-        private static void ThreadStaticEntry(object? state)
-        {
-            var self = state as PrioritizedTaskScheduler;
-            Debug.Assert(self != null);
-            self.ThreadEntry();
         }
 
         private void ThreadEntry()

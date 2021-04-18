@@ -25,18 +25,16 @@ namespace DanilovSoft.Threading
 
 #if NETSTANDARD2_0
 
-            _reg = cancellationToken.Register(OnCanceled, this, useSynchronizationContext: false);
+            _reg = cancellationToken.Register(static state => ((CancellationTokenTaskSource)state).OnCanceled(), this, useSynchronizationContext: false);
 #else
             // ExecutionContext не захватывается и не передаётся в колбеки.
-            _reg = cancellationToken.UnsafeRegister(OnCanceled, this);
+            _reg = cancellationToken.UnsafeRegister(static state => ((CancellationTokenTaskSource)state!).OnCanceled(), this);
 #endif
         }
 
-        private static void OnCanceled(object? state)
+        private void OnCanceled()
         {
-            var self = state as CancellationTokenTaskSource;
-            Debug.Assert(self != null);
-            self._tcs.TrySetCanceled(self._cancellationToken);
+            _tcs.TrySetCanceled(_cancellationToken);
         }
 
 #if !NETSTANDARD2_0

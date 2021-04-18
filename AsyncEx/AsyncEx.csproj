@@ -2,8 +2,9 @@
 	<PropertyGroup>
 		<TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.0</TargetFrameworks>
 		<LangVersion>Latest</LangVersion>
+		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
 		<Nullable>enable</Nullable>
-		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<AssemblyName>DanilovSoft.AsyncEx</AssemblyName>
 		<RootNamespace>DanilovSoft.AsyncEx</RootNamespace>
@@ -11,13 +12,34 @@
 		<Nullable>enable</Nullable>
 		<AssemblyOriginatorKeyFile>DanilovSoft.AsyncEx.pfx</AssemblyOriginatorKeyFile>
 		<Configurations>Debug;Release;Debug-Work</Configurations>
-		<Version>1.7.5</Version>
+		<Version>1.7.6</Version>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Authors>Vitalii Danilov</Authors>
 		<DocumentationFile>DanilovSoft.AsyncEx.xml</DocumentationFile>
 		<PackageProjectUrl>https://github.com/DanilovSoft/AsyncEx</PackageProjectUrl>
 		<Description>Synchronous and asynchronous primitives and coordinations.</Description>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageTags>async;task;lazyasync;asynclock</PackageTags>
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 	</PropertyGroup>
+
+	<!--<PropertyGroup Condition="'$(GITHUB_ACTIONS)'=='true'">
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+	</PropertyGroup>-->
+
+	<!-- Source debugging -->
+	<PropertyGroup>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net5.0|AnyCPU'">
+	  <DefineConstants>TRACE</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />

@@ -8,15 +8,19 @@ using System.Threading.Tasks;
 
 namespace DanilovSoft.AsyncEx
 {
+    /// <summary>
+    /// Позволяет по запросу обмениваться объектами между потоками.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     [DebuggerDisplay(@"\{State = {DebugDisplay,nq}\}")]
     [DebuggerTypeProxy(typeof(ManualResetEventSource<>.DebugView))]
     public sealed class ManualResetEventSource<T>
     {
-        private const string ConsistencyError = "Can't Take before Reset";
+        private const string NotReadyError = "Can't Take before Reset";
         private readonly object _syncObj = new();
         private volatile State _state = State.WaitingItem;
         [AllowNull]
-        private T _result = default;
+        private T _item = default;
 
         public ManualResetEventSource()
         {
@@ -29,35 +33,35 @@ namespace DanilovSoft.AsyncEx
         {
             lock (_syncObj)
             {
-                _result = default;
+                _item = default;
                 _state = State.WaitingItem;
             }
         }
 
-        public bool Reset([MaybeNullWhen(false)] out T result)
+        public bool Reset([MaybeNullWhen(false)] out T item)
         {
             lock (_syncObj)
             {
                 bool ret;
                 if (_state == State.HoldsItem)
                 {
-                    result = _result;
+                    item = _item;
                     ret = true;
                 }
                 else
                 {
-                    result = default;
+                    item = default;
                     ret = false;
                 }
 
-                _result = default;
+                _item = default;
                 _state = State.WaitingItem;
                 return ret;
             }
         }
 
         /// <exception cref="InvalidOperationException"/>
-        public bool TryTake([MaybeNullWhen(false)] out T result)
+        public bool TryTake([MaybeNullWhen(false)] out T item)
         {
             lock (_syncObj)
             {
@@ -65,20 +69,20 @@ namespace DanilovSoft.AsyncEx
                 // Поток поставщик первее зашел в критическую секцию и уже сохранил объект.
                 {
                     case State.HoldsItem:
-                        result = _result;
-                        _result = default;
+                        item = _item;
+                        _item = default;
                         _state = State.NoItem;
                         return true;
                     case State.WaitingItem:
-                        result = default;
+                        item = default;
                         return false;
                     default:
-                        throw new InvalidOperationException(ConsistencyError);
+                        throw new InvalidOperationException(NotReadyError);
                 }
             }
         }
 
-        public bool TrySet(T result)
+        public bool TrySet(T item)
         {
             // Fast-Path проверка.
             if (_state == State.WaitingItem)
@@ -87,7 +91,7 @@ namespace DanilovSoft.AsyncEx
                 {
                     if (_state == State.WaitingItem)
                     {
-                        _result = result;
+                        _item = item;
 
                         // Объект успешно сохранён для потока потребителя.
                         _state = State.HoldsItem;
@@ -104,35 +108,35 @@ namespace DanilovSoft.AsyncEx
 
         /// <returns>False если за отведённое время не получили объект от другого потока.</returns>
         /// <exception cref="InvalidOperationException"/>
-        public bool Wait(TimeSpan timeout, [MaybeNullWhen(false)] out T result)
+        public bool Wait(TimeSpan timeout, [MaybeNullWhen(false)] out T item)
         {
             lock (_syncObj)
             {
                 switch (_state)
-                // Мы первее зашли в критическую секцию, чем поток поставщик.
                 {
                     case State.WaitingItem:
+                        // Мы первее зашли в критическую секцию, чем поток поставщик.
                         // Явно разрешаем поставщику зайти в критическую секцию.
                         if (Monitor.Wait(_syncObj, timeout, exitContext: false))
                         {
-                            result = _result;
-                            _result = default;
+                            item = _item;
+                            _item = default;
                             _state = State.NoItem;
                             return true;
                         }
                         else
                         // Поставщик не зашёл в критическую секцию за предоставленное время.
                         {
-                            result = default;
+                            item = default;
                             return false;
                         }
                     case State.HoldsItem:
-                        result = _result;
-                        _result = default;
+                        item = _item;
+                        _item = default;
                         _state = State.NoItem;
                         return true;
                     default: // NoItem
-                        throw new InvalidOperationException(ConsistencyError);
+                        throw new InvalidOperationException(NotReadyError);
                 }
             }
         }
@@ -162,7 +166,7 @@ namespace DanilovSoft.AsyncEx
                 _self = self;
             }
 
-            public T Result => _self._result;
+            public T Result => _self._item;
             public State State => _self._state;
         }
     }

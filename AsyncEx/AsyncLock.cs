@@ -16,7 +16,7 @@ namespace DanilovSoft.AsyncEx
         private bool DebugDisplay => Volatile.Read(ref _taken) == 1;
 
         // Для добавления потока в очередь и удаления из очереди.
-        private readonly object _syncObj = new object();
+        private readonly object _syncObj = new();
 
         /// <summary>
         /// Очередь пользовательских тасков, которые хотят получить блокировку.
@@ -271,7 +271,7 @@ namespace DanilovSoft.AsyncEx
             /// <summary>
             /// Очередь ожидающий потоков (тасков) претендующих на захват блокировки.
             /// </summary>
-            /// <remarks>Доступ только через блокировку <see cref="_context._syncObj"/>.</remarks>
+            /// <remarks>Доступ только через блокировку <see cref="_syncObj"/>.</remarks>
             private readonly Queue<TaskCompletionSource<LockReleaser>> _queue = new Queue<TaskCompletionSource<LockReleaser>>();
 
             public int Count => _queue.Count;

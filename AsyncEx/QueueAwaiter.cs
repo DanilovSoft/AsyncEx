@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,17 +8,17 @@ namespace DanilovSoft.AsyncEx
 {
     internal sealed class QueueAwaiter
     {
-        private readonly Action<QueueAwaiter> _onCancel;
+        private readonly Queue<QueueAwaiter> _awaiters;
         private readonly TaskCompletionSource<bool> _tcs;
         private readonly CancellationTokenRegistration _canc;
         private readonly CancellationToken _cancellationToken;
         private readonly Timer? _timer;
 
-        public QueueAwaiter(Action<QueueAwaiter> onCancel, int millisecondsTimeout, CancellationToken cancellationToken)
+        public QueueAwaiter(Queue<QueueAwaiter> awaiters, int millisecondsTimeout, CancellationToken cancellationToken)
         {
             Debug.Assert(millisecondsTimeout != 0);
 
-            _onCancel = onCancel;
+            _awaiters = awaiters;
             _cancellationToken = cancellationToken;
             _tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -65,7 +66,7 @@ namespace DanilovSoft.AsyncEx
             if (_tcs.TrySetResult(false))
             {
                 Cleanup();
-                _onCancel(this);
+                RemoveSelf();
             }
         }
 
@@ -74,7 +75,16 @@ namespace DanilovSoft.AsyncEx
             if (_tcs.TrySetCanceled(_cancellationToken))
             {
                 Cleanup();
-                _onCancel(this);
+                RemoveSelf();
+            }
+        }
+
+        private void RemoveSelf()
+        {
+            lock (_awaiters)
+            {
+                // PS: в редком случае, метод Set мог обогнать и уже удалить из коллекции.
+                _awaiters.Remove(this);
             }
         }
 

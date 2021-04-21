@@ -1,14 +1,29 @@
-﻿namespace DanilovSoft.AsyncEx
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
+using DanilovSoft.Threading.Tasks;
+
+namespace DanilovSoft.AsyncEx
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.Linq;
-    using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using System.Threading.Tasks.Dataflow;
-    using DanilovSoft.Threading.Tasks;
+    public interface IParallelEnumerator2<out TInput, out TInput2>
+    {
+        TInput Parent { get; }
+        IAsyncEnumerator<TInput2> Items { get; }
+
+        //IEnumerable<IAggregator<TResult>> Sub<TIn, TOut, TResult>(
+        //    IEnumerable<TIn> items,
+        //    Func<IParallelEnumerator<TIn>, IEnumerable<IAggregator<TOut>>> aggregateFunc,
+        //    Func<TIn, IReadOnlyList<TOut>, TResult> resultSelector);
+
+        //IEnumerable<IAggregator<TResult>> Run<TIn, TOut, TResult>(
+        //    IEnumerable<TIn> items,
+        //    Func<TIn, Task<TOut>> func, Func<TIn, TOut, TResult> resultSelector);
+    }
 
     public interface IParallelEnumerator<out TInput>
     {
@@ -153,6 +168,22 @@
         }
 
         public static async Task<IReadOnlyList<TResult>> Transform<TInput, TOutput, TResult>(IEnumerable<TInput> items,
+            Func<IParallelEnumerator<TInput>, IEnumerable<IAggregator<TOutput>>> func,
+            Func<TInput, IReadOnlyList<TOutput>, TResult> resultSelector,
+            int maxDegreeOfParallelism = -1)
+        {
+            var list = new List<TResult>();
+            IAsyncEnumerable<TResult> en = EnumerateAsync(items, func, resultSelector, maxDegreeOfParallelism);
+
+            await foreach (var result in en.ConfigureAwait(false))
+            {
+                list.Add(result);
+            }
+            return list;
+        }
+
+        public static async Task<IReadOnlyList<TResult>> Transform<TInput, TOutput, TResult>(
+            IEnumerable<TInput> items,
             Func<IParallelEnumerator<TInput>, IEnumerable<IAggregator<TOutput>>> func,
             Func<TInput, IReadOnlyList<TOutput>, TResult> resultSelector,
             int maxDegreeOfParallelism = -1)

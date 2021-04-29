@@ -46,14 +46,16 @@
             </summary>
             <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
         </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.#ctor(System.Func{System.Threading.Tasks.Task{`0}},System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> class.
+            </summary>
+            <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
+            <param name="retryOnFailure">If the factory method fails, then re-run the factory method the next time instead of caching the failed task.</param>
+        </member>
         <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.GetValueAsync">
             <summary>
              Gets the lazily initialized value of the current <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> instance.
-            </summary>
-        </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.Start">
-            <summary>
-            Starts the asynchronous initialization, if it has not already started.
             </summary>
         </member>
         <member name="T:DanilovSoft.AsyncEx.AsyncLazy`1.System_LazyDebugView">

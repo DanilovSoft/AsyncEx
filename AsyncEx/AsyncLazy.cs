@@ -17,10 +17,13 @@ namespace DanilovSoft.AsyncEx
     [DebuggerDisplay(@"\{IsValueCreated = {IsValueCreated}\}")]
     public sealed class AsyncLazy<T>
     {
+        private readonly bool _retryOnFailure;
+        private readonly Func<Task<T>> _valueFactory;
+
         /// <summary>
         /// The underlying lazy task.
         /// </summary>
-        private readonly Lazy<Task<T>> _lazy;
+        private Lazy<Task<T>> _lazy;
 
         /// <summary>
         ///  Gets the lazily initialized value of the current <see cref="AsyncLazy{T}"/> instance.
@@ -39,10 +42,12 @@ namespace DanilovSoft.AsyncEx
         {
             get
             {
-                if (_lazy.IsValueCreated)
+                var lazy = Volatile.Read(ref _lazy);
+
+                if (lazy.IsValueCreated)
                 // Таск уже создан.
                 {
-                    Task<T> task = _lazy.Value;
+                    Task<T> task = lazy.Value;
                     return task.Status == TaskStatus.RanToCompletion;
                 }
                 return false;
@@ -60,10 +65,12 @@ namespace DanilovSoft.AsyncEx
         {
             get
             {
-                if (_lazy.IsValueCreated)
+                var lazy = Volatile.Read(ref _lazy);
+
+                if (lazy.IsValueCreated)
                 // Таск уже создан.
                 {
-                    Task<T> task = _lazy.Value;
+                    Task<T> task = lazy.Value;
                     if (task.Status == TaskStatus.RanToCompletion)
                     // Таск уже успешно завершен.
                     {
@@ -81,127 +88,93 @@ namespace DanilovSoft.AsyncEx
         {
             get 
             {
-                if (_lazy.IsValueCreated)
+                var lazy = Volatile.Read(ref _lazy);
+
+                if (lazy.IsValueCreated)
                 // Таск уже создан.
                 {
-                    Task<T> task = _lazy.Value;
+                    Task<T> task = lazy.Value;
                     return task.IsFaulted || task.IsCanceled;
                 }
                 return false;
             }
         }
 
-        //private bool IsCanceled
-        //{
-        //    get
-        //    {
-        //        if (_lazy.IsValueCreated)
-        //        // Таск уже создан.
-        //        {
-        //            Task<T> task = _lazy.Value;
-        //            return task.IsCanceled;
-        //        }
-        //        return false;
-        //    }
-        //}
-
-        //private bool IsCompleted
-        //{
-        //    get
-        //    {
-        //        if (_lazy.IsValueCreated)
-        //        // Таск уже создан.
-        //        {
-        //            Task<T> task = _lazy.Value;
-        //            return task.IsCompleted;
-        //        }
-        //        return false;
-        //    }
-        //}
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AsyncLazy{T}"/> class.
+        /// </summary>
+        /// <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
+        public AsyncLazy(Func<Task<T>> valueFactory) : this(valueFactory, retryOnFailure: false)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AsyncLazy{T}"/> class.
         /// </summary>
         /// <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
+        /// <param name="retryOnFailure">If the factory method fails, then re-run the factory method the next time instead of caching the failed task.</param>
         public AsyncLazy(Func<Task<T>> valueFactory, bool retryOnFailure)
         {
-            // Гарантируем однократный запуск асинхронной операции.
-            _lazy = new Lazy<Task<T>>(valueFactory: valueFactory, LazyThreadSafetyMode.ExecutionAndPublication);
+            _valueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
+            _retryOnFailure = retryOnFailure;
+            _lazy = CreateLazy(valueFactory);
         }
 
         /// <summary>
         ///  Gets the lazily initialized value of the current <see cref="AsyncLazy{T}"/> instance.
         /// </summary>
-        public ValueTask<T> GetValueAsync()
+        public Task<T> GetValueAsync()
         {
-            // Тригерим запуск асинхронной операции.
-            Task<T> task = _lazy.Value;
+            var lazy = Volatile.Read(ref _lazy);
+            bool firstTry = true;
+
+        RetryOnFailure:
+
+            Task<T> task;
+            try
+            {
+                // Тригерим запуск асинхронной операции.
+                task = lazy.Value;
+            }
+            catch (Exception ex)
+            {
+                if (_retryOnFailure && firstTry)
+                {
+                    firstTry = false;
+                    lazy = Swap(lazy);
+                    goto RetryOnFailure;
+                }
+                return Task.FromException<T>(ex);
+            }
 
             if (task.Status == TaskStatus.RanToCompletion)
             {
-                return new ValueTask<T>(result: task.Result);
+                return task;
             }
-            else
-            // Таск ещё не завершился или завершился с ошибкой.
+            else if (_retryOnFailure && firstTry && task is { IsFaulted: true } or { IsCanceled: true })
             {
-                return new ValueTask<T>(task: task);
+                firstTry = false;
+                lazy = Swap(lazy);
+                goto RetryOnFailure;
             }
+
+            // Таск ещё не завершился или завершился с ошибкой.
+            return task;
         }
 
-        //public bool GetValueOrStart(out T value)
-        //{
-        //    // Тригерим запуск асинхронной операции.
-        //    Task<T> task = _lazy.Value;
-
-        //    if (task.IsCompleted)
-        //    // Таск завершен (не факт что успешно).
-        //    {
-        //        // Может быть исключение.
-        //        value = task.GetAwaiter().GetResult();
-        //        return true;
-        //    }
-        //    else
-        //    {
-        //        value = default;
-        //        return false;
-        //    }
-        //}
-
-        //public bool TryGetValue(out T value)
-        //{
-        //    if (_lazy.IsValueCreated)
-        //    // Таск уже создан.
-        //    {
-        //        Task<T> task = _lazy.Value;
-
-        //        if (task.IsCompleted)
-        //        // Таск завершен (не факт что успешно).
-        //        {
-        //            // Может быть исключение.
-        //            value = task.GetAwaiter().GetResult();
-        //            return true;
-        //        }
-        //        else
-        //        {
-        //            value = default;
-        //            return false;
-        //        }
-        //    }
-        //    else
-        //    // Таск ещё не запущен.
-        //    {
-        //        value = default;
-        //        return false;
-        //    }
-        //}
-
-        /// <summary>
-        /// Starts the asynchronous initialization, if it has not already started.
-        /// </summary>
-        public void Start()
+        private Lazy<Task<T>> Swap(Lazy<Task<T>> lazy)
         {
-            // Тригерим запуск асинхронной операции.
-            _ = _lazy.Value;
+            var newLazy = CreateLazy(_valueFactory);
+            var cas = Interlocked.CompareExchange(ref _lazy, newLazy, lazy);
+
+            return cas == lazy ? newLazy : cas;
+        }
+
+        private static Lazy<Task<T>> CreateLazy(Func<Task<T>> valueFactory)
+        {
+            // Гарантируем однократный запуск асинхронной операции.
+            var newLazy = new Lazy<Task<T>>(valueFactory, LazyThreadSafetyMode.ExecutionAndPublication);
+            return newLazy;
         }
 
         /// <summary>A debugger view of the <see cref="AsyncLazy{T}"/> to surface additional debugging properties and 

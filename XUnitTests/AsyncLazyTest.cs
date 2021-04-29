@@ -52,5 +52,26 @@ namespace XUnitTests
 
             Assert.Equal(0, value);
         }
+
+        [Fact]
+        public async Task TestSyncException()
+        {
+            var lazy = new AsyncLazy<int>(() =>
+            {
+                throw new NotSupportedException();
+                return Task.FromResult(0);
+            }, 
+            retryOnFailure: true);
+
+
+            try
+            {
+                await lazy.GetValueAsync();
+            }
+            catch (Exception)
+            {
+                Assert.True(false);
+            }
+        }
     }
 }

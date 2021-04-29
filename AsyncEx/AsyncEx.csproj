@@ -2,10 +2,9 @@
 	<PropertyGroup>
 		<TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.0</TargetFrameworks>
 		<LangVersion>Latest</LangVersion>
-		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+		<!--<TreatWarningsAsErrors>True</TreatWarningsAsErrors>-->
 		<Nullable>enable</Nullable>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<AssemblyName>DanilovSoft.AsyncEx</AssemblyName>
 		<RootNamespace>DanilovSoft.AsyncEx</RootNamespace>
 		<SignAssembly>true</SignAssembly>

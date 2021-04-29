@@ -10,69 +10,29 @@ using DanilovSoft.AsyncEx;
 
 namespace TestApp
 {
-    class User
-    {
-        public int UserId { get; set; }
-        public Item[] Items { get; set; }
-    }
-
-    class Item
-    {
-        public int ItemId { get; set; }
-    }
-
     class Program
     {
         static async Task Main()
         {
-            var users = new User[] 
-            { 
-                new User 
-                { 
-                    UserId = 123,
-                    Items = new Item[] 
-                    { 
-                        new Item 
-                        {
-                            ItemId = 1
-                        } 
-                    }
-                },
-                new User
-                {
-                    UserId = 456,
-                    Items = new Item[]
-                    {
-                        new Item
-                        {
-                            ItemId = 2
-                        }
-                    }
-                },
-            };
-
-            var result = await ParallelTransform.Transform(users, x => 
+            var v = new AsyncLazy<int>(async () => 
             {
-                return x.Run(x.Item.Items, item => GetItemName(item.ItemId), (item, itemName) => (Item: item, ItemName: itemName));
-            }, 
-            (user, items) => (User: user, Items: items));
+                await Task.Delay(10_000);
+                return 1;
+            });
 
+            var lazy = new Lazy<int>(LazyThreadSafetyMode.ExecutionAndPublication);
 
-
-            var result2 = await ParallelTransform.Transform(users, async x =>
+            while (true)
             {
-                await foreach (var item in x.Item.Items)
+                try
                 {
-                    var itemName = await GetItemName(x.Item.UserId, item.ItemId);
-                    return (x.Item, ItemName: itemName);
+                    var n = await v.GetValueAsync();
                 }
-            },
-            (user, items) => (User: user, Items: items));
-        }
-
-        private static async Task<string> GetItemName(int userId, int itemId)
-        {
-            return v.ToString();
+                catch (Exception)
+                {
+                    Thread.Sleep(1000);
+                }
+            }
         }
     }
 }

@@ -64,7 +64,7 @@ namespace XUnitTests
             var cts = new CancellationTokenSource(2000);
             //_ = Task.Delay(2000).ContinueWith(_ => { mre.Set(); });
 
-            ValueTask task = mre.WaitAsync(cts.Token);
+            Task task = mre.WaitAsync(cts.Token);
 
             try
             {

@@ -32,7 +32,7 @@ namespace DanilovSoft.AsyncEx
         IEnumerable<IAggregator<TResult>> Sub<TIn, TOut, TResult>(
             IEnumerable<TIn> items,
             Func<IParallelEnumerator<TIn>, IEnumerable<IAggregator<TOut>>> aggregateFunc,
-            Func<TIn, IReadOnlyList<TOut>, TResult> resultSelector);
+            Func<TIn, TOut[], TResult> resultSelector);
 
         IEnumerable<IAggregator<TResult>> Run<TIn, TOut, TResult>(
             IEnumerable<TIn> items, 
@@ -42,7 +42,7 @@ namespace DanilovSoft.AsyncEx
     public interface IAggregator<TOutput>
     {
         Task InvokeAsync();
-        TOutput Result { get; }
+        TOutput InvokeResult { get; }
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ namespace DanilovSoft.AsyncEx
         private sealed class Aggregator<TOutput, TFunc, TSubItem, TSelector> : IAggregator<TOutput>
         {
             private readonly Func<TFunc, TSubItem, TSelector, Task<TOutput>> _asyncFunc;
-            public TOutput Result { get; private set; } = default!;
+            public TOutput InvokeResult { get; private set; } = default!;
             private readonly TFunc _subFunc;
             private readonly TSubItem _subItem;
             private readonly TSelector _selector;
@@ -80,7 +80,7 @@ namespace DanilovSoft.AsyncEx
 
                 if (task.IsCompletedSuccessfully())
                 {
-                    Result = task.Result;
+                    InvokeResult = task.Result;
                     return Task.CompletedTask;
                 }
                 else
@@ -88,7 +88,7 @@ namespace DanilovSoft.AsyncEx
                     return WaitAsync(task, this);
                     static async Task WaitAsync(Task<TOutput> task, Aggregator<TOutput, TFunc, TSubItem, TSelector> self)
                     {
-                        self.Result = await task.ConfigureAwait(false);
+                        self.InvokeResult = await task.ConfigureAwait(false);
                     }
                 }
             }
@@ -143,7 +143,7 @@ namespace DanilovSoft.AsyncEx
             public IEnumerable<IAggregator<TRes>> Sub<TIn, TInherim, TRes>(
                 IEnumerable<TIn> subItems, 
                 Func<IParallelEnumerator<TIn>, IEnumerable<IAggregator<TInherim>>> aggregateFunc, 
-                Func<TIn, IReadOnlyList<TInherim>, TRes> resultSelector)
+                Func<TIn, TInherim[], TRes> resultSelector)
             {
                 foreach (TIn subItem in subItems)
                 {
@@ -159,7 +159,7 @@ namespace DanilovSoft.AsyncEx
                         {
                             var ag = aggs[i];
                             await ag.InvokeAsync().ConfigureAwait(false);
-                            outputs[i] = ag.Result;
+                            outputs[i] = ag.InvokeResult;
                         }
                         return resultSelector(subItem, outputs);
                     }, subItem, aggs, resultSelector);
@@ -167,9 +167,9 @@ namespace DanilovSoft.AsyncEx
             }
         }
 
-        public static async Task<IReadOnlyList<TResult>> Transform<TInput, TOutput, TResult>(IEnumerable<TInput> items,
+        public static async Task<TResult[]> Transform<TInput, TOutput, TResult>(IEnumerable<TInput> items,
             Func<IParallelEnumerator<TInput>, IEnumerable<IAggregator<TOutput>>> func,
-            Func<TInput, IReadOnlyList<TOutput>, TResult> resultSelector,
+            Func<TInput, TOutput[], TResult> resultSelector,
             int maxDegreeOfParallelism = -1)
         {
             var list = new List<TResult>();
@@ -179,28 +179,12 @@ namespace DanilovSoft.AsyncEx
             {
                 list.Add(result);
             }
-            return list;
-        }
-
-        public static async Task<IReadOnlyList<TResult>> Transform<TInput, TOutput, TResult>(
-            IEnumerable<TInput> items,
-            Func<IParallelEnumerator<TInput>, IEnumerable<IAggregator<TOutput>>> func,
-            Func<TInput, IReadOnlyList<TOutput>, TResult> resultSelector,
-            int maxDegreeOfParallelism = -1)
-        {
-            List<TResult> list = new();
-            IAsyncEnumerable<TResult> en = EnumerateAsync(items, func, resultSelector, maxDegreeOfParallelism);
-
-            await foreach (var result in en.ConfigureAwait(false))
-            {
-                list.Add(result);
-            }
-            return list;
+            return list.ToArray();
         }
 
         public static async IAsyncEnumerable<TResult> EnumerateAsync<TInput, TOutput, TResult>(IEnumerable<TInput> items,
             Func<IParallelEnumerator<TInput>, IEnumerable<IAggregator<TOutput>>> func,
-            Func<TInput, IReadOnlyList<TOutput>, TResult> resultSelector,
+            Func<TInput, TOutput[], TResult> resultSelector,
             int maxDegreeOfParallelism)
         {
             if (items is ICollection<TInput> col && col.Count == 0)
@@ -248,17 +232,17 @@ namespace DanilovSoft.AsyncEx
             {
                 (TInput input, IAggregator<TOutput>[] agg) = itemsAgg[i];
 
-                List<TOutput> outputs = new(agg.Length);
+                TOutput[] outputs = new TOutput[agg.Length];
 
                 for (int j = 0; j < agg.Length; j++)
                 {
-                    outputs.Add(agg[j].Result);
+                    outputs[j] = agg[j].InvokeResult;
                 }
                 yield return resultSelector(input, outputs);
             }
         }
 
-        public static async Task<IReadOnlyList<TResult>> Run<TInput, TOutput, TResult>(IEnumerable<TInput> items,
+        public static async Task<TResult[]> Run<TInput, TOutput, TResult>(IEnumerable<TInput> items,
             Func<TInput, Task<TOutput>> func,
             Func<TInput, TOutput, TResult> selector,
             int maxDegreeOfParallelism = -1,
@@ -271,7 +255,7 @@ namespace DanilovSoft.AsyncEx
                 .ToArray();
         }
 
-        public static async Task<IReadOnlyList<(TInput Input, TOutput Output)>> Run<TInput, TOutput>(IEnumerable<TInput> items,
+        public static async Task<(TInput Input, TOutput Output)[]> Run<TInput, TOutput>(IEnumerable<TInput> items,
             Func<TInput, Task<TOutput>> func, int maxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
             CancellationToken cancellationToken = default)
         {
@@ -308,7 +292,7 @@ namespace DanilovSoft.AsyncEx
             if (resultBuffer.TryReceiveAll(out var outItems))
             {
                 await resultBuffer.Completion.ConfigureAwait(false);
-                return (IReadOnlyList<(TInput, TOutput)>)outItems;
+                return outItems.ToArray();
             }
             else
             {

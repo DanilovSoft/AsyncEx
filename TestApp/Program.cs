@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Threading.Tasks.Sources;
-using Nito.AsyncEx;
+using DanilovSoft.AsyncEx;
 
 namespace TestApp
 {
@@ -16,28 +16,21 @@ namespace TestApp
         {
             var lazy = new AsyncLazy<int>(() => 
             {
-                throw new NotSupportedException();
-                return Task.FromResult(0);
+                Thread.Sleep(1000);
+                throw new InvalidOperationException();
+                return Task.FromResult(1);
+            }, 
+            true);
 
-            } , AsyncLazyFlags.ExecuteOnCallingThread | AsyncLazyFlags.RetryOnFailure);
-
-            try
+            for (int i = 0; i < 10; i++)
             {
-                var t = lazy.Task;
+                _ = Task.Run(() =>
+                {
+                    _ = lazy.Task;
+                });
             }
-            catch (Exception)
-            {
 
-            }
-
-            try
-            {
-                await lazy.Task;
-            }
-            catch (Exception)
-            {
-
-            }
+            Thread.Sleep(-1);
         }
     }
 }

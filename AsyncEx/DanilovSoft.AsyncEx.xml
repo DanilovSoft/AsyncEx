@@ -10,12 +10,25 @@
             </summary>
             <typeparam name="T">The type of object that is being asynchronously initialized.</typeparam>
         </member>
-        <member name="F:DanilovSoft.AsyncEx.AsyncLazy`1._lazy">
+        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.#ctor(System.Func{System.Threading.Tasks.Task{`0}})">
             <summary>
-            The underlying lazy task.
+            Initializes a new instance of the <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> class.
             </summary>
+            <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.#ctor(System.Func{System.Threading.Tasks.Task{`0}},System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> class.
+            </summary>
+            <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
+            <param name="retryOnFailure">If the factory method fails, then re-run the factory method the next time instead of caching the failed task.</param>
         </member>
         <member name="P:DanilovSoft.AsyncEx.AsyncLazy`1.Value">
+            <summary>
+             Synchronously gets the lazily initialized value of the current <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> instance.
+            </summary>
+        </member>
+        <member name="P:DanilovSoft.AsyncEx.AsyncLazy`1.Task">
             <summary>
              Gets the lazily initialized value of the current <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> instance.
             </summary>
@@ -40,20 +53,7 @@
             Gets whether the value creation is faulted or not.
             </summary>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.#ctor(System.Func{System.Threading.Tasks.Task{`0}})">
-            <summary>
-            Initializes a new instance of the <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> class.
-            </summary>
-            <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
-        </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.#ctor(System.Func{System.Threading.Tasks.Task{`0}},System.Boolean)">
-            <summary>
-            Initializes a new instance of the <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> class.
-            </summary>
-            <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
-            <param name="retryOnFailure">If the factory method fails, then re-run the factory method the next time instead of caching the failed task.</param>
-        </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.GetValueAsync">
+        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.CreateValue">
             <summary>
              Gets the lazily initialized value of the current <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> instance.
             </summary>
@@ -231,7 +231,9 @@
         <member name="M:DanilovSoft.Threading.Tasks.TaskExtensions.DoWaitAsync(System.Threading.Tasks.Task,System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="T:System.Diagnostics.CodeAnalysis.AllowNullAttribute">
+    </members>
+</doc>
+System.Diagnostics.CodeAnalysis.AllowNullAttribute">
             <summary>
                 Specifies that <see langword="null"/> is allowed as an input even if the
                 corresponding type disallows it.

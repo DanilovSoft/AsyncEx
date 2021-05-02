@@ -23,7 +23,7 @@ namespace DanilovSoft.AsyncEx
         /// <summary>
         /// The underlying lazy task.
         /// </summary>
-        private Lazy<Task<T>> _lazy;
+        private volatile Lazy<Task<T>> _lazy;
 
         /// <summary>
         ///  Gets the lazily initialized value of the current <see cref="AsyncLazy{T}"/> instance.
@@ -42,7 +42,7 @@ namespace DanilovSoft.AsyncEx
         {
             get
             {
-                var lazy = Volatile.Read(ref _lazy);
+                var lazy = _lazy;
 
                 if (lazy.IsValueCreated)
                 // Таск уже создан.
@@ -65,7 +65,7 @@ namespace DanilovSoft.AsyncEx
         {
             get
             {
-                var lazy = Volatile.Read(ref _lazy);
+                var lazy = _lazy;
 
                 if (lazy.IsValueCreated)
                 // Таск уже создан.
@@ -88,7 +88,7 @@ namespace DanilovSoft.AsyncEx
         {
             get 
             {
-                var lazy = Volatile.Read(ref _lazy);
+                var lazy = _lazy;
 
                 if (lazy.IsValueCreated)
                 // Таск уже создан.
@@ -125,7 +125,7 @@ namespace DanilovSoft.AsyncEx
         /// </summary>
         public Task<T> GetValueAsync()
         {
-            var lazy = Volatile.Read(ref _lazy);
+            var lazy = _lazy;
             bool firstTry = true;
 
         RetryOnFailure:
@@ -147,11 +147,7 @@ namespace DanilovSoft.AsyncEx
                 return Task.FromException<T>(ex);
             }
 
-            if (task.Status == TaskStatus.RanToCompletion)
-            {
-                return task;
-            }
-            else if (_retryOnFailure && firstTry && task is { IsFaulted: true } or { IsCanceled: true })
+            if (_retryOnFailure && firstTry && task is { IsFaulted: true } or { IsCanceled: true })
             {
                 firstTry = false;
                 lazy = Swap(lazy);

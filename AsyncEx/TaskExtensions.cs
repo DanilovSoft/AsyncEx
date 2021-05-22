@@ -1,23 +1,29 @@
 ﻿using DanilovSoft.Threading;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DanilovSoft.Threading.Tasks
+namespace DanilovSoft.AsyncEx
 {
-    internal static class TaskExtensions
+    public static class TaskExtensions
     {
         /// <summary>
         /// Asynchronously waits for the task to complete, or for the cancellation token to be canceled.
         /// </summary>
-        /// <param name="task">The task to wait for. May not be <c>null</c>.</param>
+        /// <param name="task">The task to wait for.</param>
         /// <param name="cancellationToken">The cancellation token that cancels the wait.</param>
         /// <exception cref="OperationCanceledException"/>
         public static Task WaitAsync(this Task task, CancellationToken cancellationToken)
         {
+            if (task == null)
+            {
+                throw new ArgumentNullException(nameof(task));
+            }
+
             if (cancellationToken.CanBeCanceled && !task.IsCompleted)
             {
                 if (!cancellationToken.IsCancellationRequested)
@@ -74,7 +80,7 @@ namespace DanilovSoft.Threading.Tasks
         //#endif
 
         [DebuggerStepThrough]
-        public static bool IsCompletedSuccessfully(this Task task)
+        internal static bool IsCompletedSuccessfully(this Task task)
         {
 #if NETSTANDARD2_0
             return task.Status == TaskStatus.RanToCompletion;

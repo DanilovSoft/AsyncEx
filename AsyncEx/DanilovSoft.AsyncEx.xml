@@ -10,25 +10,12 @@
             </summary>
             <typeparam name="T">The type of object that is being asynchronously initialized.</typeparam>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.#ctor(System.Func{System.Threading.Tasks.Task{`0}})">
+        <member name="F:DanilovSoft.AsyncEx.AsyncLazy`1._lazy">
             <summary>
-            Initializes a new instance of the <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> class.
+            The underlying lazy task.
             </summary>
-            <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
-        </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.#ctor(System.Func{System.Threading.Tasks.Task{`0}},System.Boolean)">
-            <summary>
-            Initializes a new instance of the <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> class.
-            </summary>
-            <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
-            <param name="retryOnFailure">If the factory method fails, then re-run the factory method the next time instead of caching the failed task.</param>
         </member>
         <member name="P:DanilovSoft.AsyncEx.AsyncLazy`1.Value">
-            <summary>
-             Synchronously gets the lazily initialized value of the current <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> instance.
-            </summary>
-        </member>
-        <member name="P:DanilovSoft.AsyncEx.AsyncLazy`1.Task">
             <summary>
              Gets the lazily initialized value of the current <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> instance.
             </summary>
@@ -53,7 +40,20 @@
             Gets whether the value creation is faulted or not.
             </summary>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.CreateValue">
+        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.#ctor(System.Func{System.Threading.Tasks.Task{`0}})">
+            <summary>
+            Initializes a new instance of the <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> class.
+            </summary>
+            <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.#ctor(System.Func{System.Threading.Tasks.Task{`0}},System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> class.
+            </summary>
+            <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
+            <param name="retryOnFailure">If the factory method fails, then re-run the factory method the next time instead of caching the failed task.</param>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.GetValueAsync">
             <summary>
              Gets the lazily initialized value of the current <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> instance.
             </summary>
@@ -220,15 +220,15 @@
             Шорткат для Task.Run(() =>
             </summary>
         </member>
-        <member name="M:DanilovSoft.Threading.Tasks.TaskExtensions.WaitAsync(System.Threading.Tasks.Task,System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.AsyncEx.TaskExtensions.WaitAsync(System.Threading.Tasks.Task,System.Threading.CancellationToken)">
             <summary>
             Asynchronously waits for the task to complete, or for the cancellation token to be canceled.
             </summary>
-            <param name="task">The task to wait for. May not be <c>null</c>.</param>
+            <param name="task">The task to wait for.</param>
             <param name="cancellationToken">The cancellation token that cancels the wait.</param>
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.Threading.Tasks.TaskExtensions.DoWaitAsync(System.Threading.Tasks.Task,System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.AsyncEx.TaskExtensions.DoWaitAsync(System.Threading.Tasks.Task,System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
     </members>

@@ -1,5 +1,4 @@
-﻿using DanilovSoft.Threading.Tasks;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -48,7 +47,6 @@ namespace DanilovSoft.AsyncEx
         /// <exception cref="ArgumentNullException"></exception>
         public Task LockAsync(Func<Task> asyncAction)
         {
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (asyncAction != null)
             {
                 ValueTask<LockReleaser> lockTask = LockAsync();
@@ -110,7 +108,9 @@ namespace DanilovSoft.AsyncEx
                 }
             }
             else
+            {
                 throw new ArgumentNullException(nameof(asyncAction));
+            }
         }
 
         /// <summary>

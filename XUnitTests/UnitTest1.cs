@@ -30,7 +30,7 @@ namespace XUnitTests
         public async Task TestCancellableTask()
         {
             var cts = new CancellationTokenSource();
-            var task = DanilovSoft.Threading.Tasks.TaskExtensions.WaitAsync(Task.Delay(-1), cts.Token);
+            var task = DanilovSoft.AsyncEx.TaskExtensions.WaitAsync(Task.Delay(-1), cts.Token);
             cts.Cancel();
 
             try

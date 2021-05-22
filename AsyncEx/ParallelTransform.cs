@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using DanilovSoft.Threading.Tasks;
 
 namespace DanilovSoft.AsyncEx
 {

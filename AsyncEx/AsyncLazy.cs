@@ -17,7 +17,7 @@ namespace DanilovSoft.AsyncEx
     [DebuggerDisplay(@"\{IsValueCreated = {IsValueCreated}\}")]
     public sealed class AsyncLazy<T>
     {
-        private readonly bool _retryOnFailure;
+        private readonly bool _cacheFailure;
         private readonly Func<Task<T>> _valueFactory;
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace DanilovSoft.AsyncEx
         /// Initializes a new instance of the <see cref="AsyncLazy{T}"/> class.
         /// </summary>
         /// <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
-        public AsyncLazy(Func<Task<T>> valueFactory) : this(valueFactory, retryOnFailure: false)
+        public AsyncLazy(Func<Task<T>> valueFactory) : this(valueFactory, cacheFailure: true)
         {
         }
 
@@ -112,11 +112,11 @@ namespace DanilovSoft.AsyncEx
         /// Initializes a new instance of the <see cref="AsyncLazy{T}"/> class.
         /// </summary>
         /// <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
-        /// <param name="retryOnFailure">If the factory method fails, then re-run the factory method the next time instead of caching the failed task.</param>
-        public AsyncLazy(Func<Task<T>> valueFactory, bool retryOnFailure)
+        /// <param name="cacheFailure">If <see langword="false"/> then if the factory method fails, then re-run the factory method the next time instead of caching the failed task.</param>
+        public AsyncLazy(Func<Task<T>> valueFactory, bool cacheFailure)
         {
             _valueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
-            _retryOnFailure = retryOnFailure;
+            _cacheFailure = cacheFailure;
             _lazy = CreateLazy(valueFactory);
         }
 
@@ -138,16 +138,14 @@ namespace DanilovSoft.AsyncEx
             }
             catch (Exception ex)
             {
-                if (_retryOnFailure && firstTry)
+                if (!_cacheFailure)
                 {
-                    firstTry = false;
-                    lazy = Swap(lazy);
-                    goto RetryOnFailure;
+                    Swap(lazy);
                 }
                 return Task.FromException<T>(ex);
             }
 
-            if (_retryOnFailure && firstTry && task is { IsFaulted: true } or { IsCanceled: true })
+            if (!_cacheFailure && firstTry && task is { IsFaulted: true } or { IsCanceled: true })
             {
                 firstTry = false;
                 lazy = Swap(lazy);
@@ -156,6 +154,19 @@ namespace DanilovSoft.AsyncEx
 
             // Таск ещё не завершился или завершился с ошибкой.
             return task;
+        }
+
+        /// <summary>
+        /// Starts the asynchronous initialization, if it has not already started.
+        /// </summary>
+        public void Start()
+        {
+            try
+            {
+                // Тригерим запуск асинхронной операции.
+                _ = _lazy.Value; // Может быть исключение в синхронной части метода фабрики.
+            }
+            catch { }
         }
 
         private Lazy<Task<T>> Swap(Lazy<Task<T>> lazy)

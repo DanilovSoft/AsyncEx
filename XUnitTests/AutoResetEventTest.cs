@@ -103,7 +103,7 @@ namespace XUnitTests
             var sw = Stopwatch.StartNew();
             bool success = await a.WaitAsync(500, cts.Token);
             sw.Stop();
-            Assert.InRange(sw.ElapsedMilliseconds, 500, 2000);
+            Assert.InRange(sw.ElapsedMilliseconds, 400, 2000);
             Assert.False(success);
         }
     }

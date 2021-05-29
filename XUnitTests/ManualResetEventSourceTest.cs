@@ -9,22 +9,6 @@ namespace XUnitTests
     public class ManualResetEventSourceTest
     {
         [Fact]
-        public void Test1()
-        {
-            var mres = new ManualResetEventSource<int>();
-
-            try
-            {
-                int n = mres.Wait();
-            }
-            catch (InvalidOperationException)
-            {
-
-            }
-            Assert.True(false);
-        }
-
-        [Fact]
         public void Test2()
         {
             var mres = new ManualResetEventSource<int>();
@@ -36,12 +20,12 @@ namespace XUnitTests
             try
             {
                 mres.TryTake(out _);
+                Assert.True(false);
             }
             catch (InvalidOperationException)
             {
-
+                
             }
-            Assert.True(false);
         }
     }
 }

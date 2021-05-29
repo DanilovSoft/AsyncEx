@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -30,13 +31,16 @@ namespace XUnitTests
 
             var lazy = new AsyncLazy<int>(async () => 
             {
-                await Task.Delay(1000);
+                await Task.Delay(500);
 
                 if (tryes++ == 0)
+                {
                     throw new InvalidOperationException();
+                }
 
                 return 0;
-            });
+            }, 
+            cacheFailure: false);
 
             int value;
             try
@@ -46,6 +50,7 @@ namespace XUnitTests
             }
             catch (InvalidOperationException)
             {
+                
             }
 
             value = await lazy.GetValueAsync();
@@ -58,19 +63,20 @@ namespace XUnitTests
         {
             var lazy = new AsyncLazy<int>(() =>
             {
-                throw new NotSupportedException();
+                throw new InvalidOperationException();
                 return Task.FromResult(0);
             }, 
-            retryOnFailure: true);
+            cacheFailure: false);
 
 
             try
             {
                 await lazy.GetValueAsync();
+                Assert.True(false);
             }
             catch (Exception)
             {
-                Assert.True(false);
+
             }
         }
     }

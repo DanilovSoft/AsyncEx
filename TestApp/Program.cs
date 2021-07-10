@@ -14,23 +14,7 @@ namespace TestApp
     {
         static async Task Main()
         {
-            var lazy = new AsyncLazy<int>(() => 
-            {
-                Thread.Sleep(1000);
-                throw new InvalidOperationException();
-                return Task.FromResult(1);
-            }, 
-            true);
-
-            for (int i = 0; i < 10; i++)
-            {
-                _ = Task.Run(() =>
-                {
-                    _ = lazy.Task;
-                });
-            }
-
-            Thread.Sleep(-1);
+           
         }
     }
 }

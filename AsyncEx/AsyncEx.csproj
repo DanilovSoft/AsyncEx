@@ -2,6 +2,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.0</TargetFrameworks>
 		<LangVersion>Latest</LangVersion>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
 		<!--<TreatWarningsAsErrors>True</TreatWarningsAsErrors>-->
 		<Nullable>enable</Nullable>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -22,19 +23,12 @@
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 	</PropertyGroup>
 
-	<!--<PropertyGroup Condition="'$(GITHUB_ACTIONS)'=='true'">
-		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-	</PropertyGroup>-->
-
 	<!-- Source debugging -->
 	<PropertyGroup>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net5.0|AnyCPU'">
-	  <DefineConstants>TRACE</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />

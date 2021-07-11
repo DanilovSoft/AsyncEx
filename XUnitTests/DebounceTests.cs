@@ -22,14 +22,21 @@ namespace XUnitTests
             }
 
             var debounce = new Debounce<int>(SomeAction, TimeSpan.FromMilliseconds(500));
-            
-            debounce.Invoke(1);
-            debounce.Invoke(2);
-            debounce.Invoke(3);
+            try
+            {
+                debounce.Invoke(1);
+                debounce.Invoke(2);
+                debounce.Invoke(3);
 
-            Thread.Sleep(600);
-            
-            Assert.Equal(3, controlValue);
+                Thread.Sleep(600);
+
+                Assert.Equal(3, controlValue);
+            }
+            finally
+            {
+                debounce.Cancel();
+                debounce.Dispose();
+            }
         }
 
         [Fact]
@@ -54,6 +61,7 @@ namespace XUnitTests
             finally
             {
                 debounce.Cancel();
+                debounce.Dispose();
             }
 
             Assert.Equal(3, controlValue);
@@ -80,6 +88,7 @@ namespace XUnitTests
             finally
             {
                 debounce.Cancel();
+                debounce.Dispose();
             }
 
             Thread.Sleep(600);

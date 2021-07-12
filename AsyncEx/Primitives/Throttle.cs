@@ -21,7 +21,7 @@ namespace DanilovSoft.AsyncEx
         /// Чтение и запись только в блокировке _invokeObj.
         /// </summary>
         [AllowNull] private T _arg;
-        private int _scheduled;
+        private volatile bool _scheduled;
 
         /// <summary>
         /// 
@@ -91,8 +91,9 @@ namespace DanilovSoft.AsyncEx
 
                 _arg = arg;
 
-                if (Interlocked.CompareExchange(ref _scheduled, 1, 0) == 0)
+                if (!_scheduled)
                 {
+                    _scheduled = true;
                     _timer.Change(_delay, Timeout.InfiniteTimeSpan);
                 }
             }
@@ -149,7 +150,8 @@ namespace DanilovSoft.AsyncEx
 
             lock (_timerObj)
             {
-                Interlocked.Exchange(ref _scheduled, 0);
+                // Разрешить следующий запуск таймера.
+                _scheduled = false;
 
                 if (_callback != null)
                 {
@@ -175,7 +177,7 @@ namespace DanilovSoft.AsyncEx
         }
 
         /// <summary>
-        /// Асинхронно ожидает однократное завершение колбэка или проверяет что колбэк не запущен.
+        /// Асинхронно ожидает однократное завершение колбэка.
         /// </summary>
         private ValueTask WaitForCallbackToCompleteAsync()
         {

@@ -28,7 +28,7 @@ namespace DanilovSoft.AsyncEx
     {
         TInput Item { get; }
 
-        IEnumerable<IAggregator<TResult>> Sub<TIn, TOut, TResult>(
+        IEnumerable<IAggregator<TResult>> SubQuery<TIn, TOut, TResult>(
             IEnumerable<TIn> items,
             Func<IParallelEnumerator<TIn>, IEnumerable<IAggregator<TOut>>> aggregateFunc,
             Func<TIn, TOut[], TResult> resultSelector);
@@ -139,7 +139,7 @@ namespace DanilovSoft.AsyncEx
                 }
             }
 
-            public IEnumerable<IAggregator<TRes>> Sub<TIn, TInherim, TRes>(
+            public IEnumerable<IAggregator<TRes>> SubQuery<TIn, TInherim, TRes>(
                 IEnumerable<TIn> subItems, 
                 Func<IParallelEnumerator<TIn>, IEnumerable<IAggregator<TInherim>>> aggregateFunc, 
                 Func<TIn, TInherim[], TRes> resultSelector)
@@ -187,7 +187,9 @@ namespace DanilovSoft.AsyncEx
             int maxDegreeOfParallelism)
         {
             if (items is ICollection<TInput> col && col.Count == 0)
+            {
                 yield break;
+            }
 
             var enumerator = new ParallelEnumerator<TInput>();
 

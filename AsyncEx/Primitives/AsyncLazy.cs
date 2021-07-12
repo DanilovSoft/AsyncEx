@@ -125,7 +125,7 @@ namespace DanilovSoft.AsyncEx
         /// </summary>
         public Task<T> GetValueAsync()
         {
-            var lazy = _lazy;
+            Lazy<Task<T>> lazy = _lazy;
             bool firstTry = true;
 
         RetryOnFailure:

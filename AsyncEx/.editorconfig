@@ -97,11 +97,11 @@ dotnet_style_prefer_inferred_tuple_names = true:suggestion
 #Style - implicit and explicit types
 
 #prefer explicit type over var in all cases, unless overridden by another code style rule
-csharp_style_var_elsewhere = false:suggestion
+csharp_style_var_elsewhere = false:none
 #prefer explicit type over var to declare variables with built-in system types such as int
-csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_for_built_in_types = false:none
 #prefer var when the type is already mentioned on the right-hand side of a declaration expression
-csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_when_type_is_apparent = true:none
 
 #Style - language keyword and framework type options
 
@@ -139,3 +139,6 @@ dotnet_style_qualification_for_property = false:suggestion
 
 # CS1573: Параметр не имеет соответствующий тег параметра в комментарии XML (в отличие от остальных параметров)
 dotnet_diagnostic.CS1573.severity = none
+
+# IDE0008: Использование явного типа
+dotnet_diagnostic.IDE0008.severity = none

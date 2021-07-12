@@ -11,7 +11,8 @@ using System.Threading.Tasks;
 
 namespace DanilovSoft.AsyncEx
 {
-    public sealed class Debounce<T> : IDisposable
+    // Нужно еще доработать и потом сделать public.
+    internal sealed class Debounce<T> : IDisposable
     {
         private readonly object _invokeObj = new();
         private readonly object _timerObj = new();

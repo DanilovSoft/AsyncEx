@@ -264,6 +264,28 @@
         <member name="M:DanilovSoft.AsyncEx.TaskExtensions.DoWaitAsync(System.Threading.Tasks.Task,System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
+        <member name="F:DanilovSoft.AsyncEx.Throttle`1._arg">
+            <summary>
+            Чтение и запись только в блокировке _invokeObj.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.Throttle`1.#ctor(System.Action{`0},System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="delay">Задержка в миллисекундах.</param>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.Throttle`1.Invoke(`0)">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.Throttle`1.DisposeCore">
+            <returns>True если вызов колбэка гарантированно предотвращён.</returns>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.Throttle`1.WaitForCallbackToCompleteAsync">
+            <summary>
+            Асинхронно ожидает однократное завершение колбэка или проверяет что колбэк не запущен.
+            </summary>
+        </member>
         <member name="M:DanilovSoft.AsyncEx.ThrowHelper.ThrowArgumentOutOfRangeException(System.String)">
             <exception cref="T:System.ArgumentOutOfRangeException"/>
         </member>

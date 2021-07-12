@@ -12,6 +12,9 @@ using System.Threading.Tasks;
 namespace DanilovSoft.AsyncEx
 {
     // Нужно еще доработать и потом сделать public.
+    // TODO убрать Cancel
+    // Dispose всегда ждёт завершение колбэка.
+    // Асинхронный диспоуз.
     internal sealed class Debounce<T> : IDisposable
     {
         private readonly object _invokeObj = new();
@@ -153,7 +156,8 @@ namespace DanilovSoft.AsyncEx
 
         /// <exception cref="ObjectDisposedException"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [MemberNotNull(nameof(_timer), nameof(_callback))]
+        [MemberNotNull(nameof(_timer))]
+        [MemberNotNull(nameof(_callback))]
         private void CheckDisposed()
         {
             if (_disposed)

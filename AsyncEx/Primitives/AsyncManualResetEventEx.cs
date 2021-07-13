@@ -75,7 +75,7 @@ namespace DanilovSoft.AsyncEx
             long totalMilliseconds = (long)timeout.TotalMilliseconds;
             if (totalMilliseconds < -1 || totalMilliseconds > int.MaxValue)
             {
-                ThrowHelper.ThrowArgumentOutOfRangeException(nameof(timeout));
+                ThrowHelper.ThrowArgumentOutOfRange(nameof(timeout));
             }
 
             return WaitAsync((int)totalMilliseconds, cancellationToken);
@@ -94,7 +94,7 @@ namespace DanilovSoft.AsyncEx
         {
             if (millisecondsTimeout < -1)
             {
-                ThrowHelper.ThrowArgumentOutOfRangeException(nameof(millisecondsTimeout));
+                ThrowHelper.ThrowArgumentOutOfRange(nameof(millisecondsTimeout));
             }
 
             if (cancellationToken.IsCancellationRequested)

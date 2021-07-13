@@ -9,41 +9,6 @@ using System.Threading.Tasks.Dataflow;
 
 namespace DanilovSoft.AsyncEx
 {
-    public interface IParallelEnumerator2<out TInput, out TInput2>
-    {
-        TInput Parent { get; }
-        IAsyncEnumerator<TInput2> Items { get; }
-
-        //IEnumerable<IAggregator<TResult>> Sub<TIn, TOut, TResult>(
-        //    IEnumerable<TIn> items,
-        //    Func<IParallelEnumerator<TIn>, IEnumerable<IAggregator<TOut>>> aggregateFunc,
-        //    Func<TIn, IReadOnlyList<TOut>, TResult> resultSelector);
-
-        //IEnumerable<IAggregator<TResult>> Run<TIn, TOut, TResult>(
-        //    IEnumerable<TIn> items,
-        //    Func<TIn, Task<TOut>> func, Func<TIn, TOut, TResult> resultSelector);
-    }
-
-    public interface IParallelEnumerator<out TInput>
-    {
-        TInput Item { get; }
-
-        IEnumerable<IAggregator<TResult>> SubQuery<TIn, TOut, TResult>(
-            IEnumerable<TIn> items,
-            Func<IParallelEnumerator<TIn>, IEnumerable<IAggregator<TOut>>> aggregateFunc,
-            Func<TIn, TOut[], TResult> resultSelector);
-
-        IEnumerable<IAggregator<TResult>> Run<TIn, TOut, TResult>(
-            IEnumerable<TIn> items, 
-            Func<TIn, Task<TOut>> func, Func<TIn, TOut, TResult> resultSelector);
-    }
-
-    public interface IAggregator<TOutput>
-    {
-        Task InvokeAsync();
-        TOutput InvokeResult { get; }
-    }
-
     /// <summary>
     /// Конвейер для параллельной обработки данных.
     /// </summary>
@@ -186,7 +151,22 @@ namespace DanilovSoft.AsyncEx
             Func<TInput, TOutput[], TResult> resultSelector,
             int maxDegreeOfParallelism)
         {
-            if (items is ICollection<TInput> col && col.Count == 0)
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
+
+            if (func == null)
+            {
+                throw new ArgumentNullException(nameof(func));
+            }
+
+            if (resultSelector == null)
+            {
+                throw new ArgumentNullException(nameof(resultSelector));
+            }
+
+            if (items is ICollection<TInput> { Count: 0 })
             {
                 yield break;
             }
@@ -260,8 +240,15 @@ namespace DanilovSoft.AsyncEx
             Func<TInput, Task<TOutput>> func, int maxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
             CancellationToken cancellationToken = default)
         {
-            if (items is ICollection<TInput> col && col.Count == 0)
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
+
+            if (items is ICollection<TInput> { Count: 0 })
+            {
                 return Array.Empty<(TInput Input, TOutput Output)>();
+            }
 
             var transformBlock = new TransformBlock<TInput, (TInput, TOutput)>(input => RunTransform(func, input), 
             new ExecutionDataflowBlockOptions
@@ -333,6 +320,11 @@ namespace DanilovSoft.AsyncEx
             Func<TInput, Task> func, int maxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
             CancellationToken cancellationToken = default)
         {
+            if (items is null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
+
             var actionBlock = new ActionBlock<TInput>(input => func(input), new()
             {
                 EnsureOrdered = false,

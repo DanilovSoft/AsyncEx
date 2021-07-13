@@ -25,6 +25,7 @@ namespace DanilovSoft.AsyncEx
             if (millisecondsTimeout != Timeout.Infinite)
             {
                 _timer = new Timer(static state => ((QueueAwaiter)state!).TrySetTimeout(), this, millisecondsTimeout, Timeout.Infinite);
+                
                 if (_tcs.Task.IsCompleted) // волатильное свойство (проверил в исходнике).
                 {
                     // Поддержим редкий случай когда таймер может сработать быстрее чем мы запишем его хендлер в переменную,

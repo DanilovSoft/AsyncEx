@@ -4,6 +4,11 @@
         <name>DanilovSoft.AsyncEx</name>
     </assembly>
     <members>
+        <member name="T:DanilovSoft.AsyncEx.ParallelTransform">
+            <summary>
+            Конвейер для параллельной обработки данных.
+            </summary>
+        </member>
         <member name="M:DanilovSoft.AsyncEx.AsyncAutoResetEvent.WaitAsync(System.Int32)">
             <exception cref="T:System.ArgumentOutOfRangeException"/>
         </member>
@@ -219,6 +224,28 @@
         <member name="M:DanilovSoft.AsyncEx.ManualResetEventSource`1.Wait">
             <exception cref="T:System.InvalidOperationException"/>
         </member>
+        <member name="F:DanilovSoft.AsyncEx.Throttle`1._arg">
+            <summary>
+            Чтение и запись только в блокировке _invokeObj.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.Throttle`1.#ctor(System.Action{`0},System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="delay">Задержка в миллисекундах.</param>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.Throttle`1.Invoke(`0)">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.Throttle`1.DisposeCore">
+            <returns>True если вызов колбэка гарантированно предотвращён.</returns>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.Throttle`1.WaitForCallbackToCompleteAsync">
+            <summary>
+            Асинхронно ожидает однократное завершение колбэка.
+            </summary>
+        </member>
         <member name="T:DanilovSoft.AsyncEx.LockReleaser">
             <summary>
             Держит блокировку <see cref="T:DanilovSoft.AsyncEx.AsyncLock"/> до вызова Dispose.
@@ -236,11 +263,6 @@
             Освобождает захваченную блокировку.
             </summary>
             <remarks>Потокобезопасно.</remarks>
-        </member>
-        <member name="T:DanilovSoft.AsyncEx.ParallelTransform">
-            <summary>
-            Конвейер для параллельной обработки данных.
-            </summary>
         </member>
         <member name="M:DanilovSoft.AsyncEx.TaskEx.WhenAllOrAnyException(System.Threading.Tasks.Task[])">
             <remarks>Проглатывает последующие исключения.</remarks>
@@ -264,101 +286,17 @@
         <member name="M:DanilovSoft.AsyncEx.TaskExtensions.DoWaitAsync(System.Threading.Tasks.Task,System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="F:DanilovSoft.AsyncEx.Throttle`1._arg">
-            <summary>
-            Чтение и запись только в блокировке _invokeObj.
-            </summary>
+        <member name="M:DanilovSoft.AsyncEx.ThrowHelper.ArgumentNotNull``1(``0,System.String)">
+            <exception cref="T:System.ArgumentNullException"/>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.Throttle`1.#ctor(System.Action{`0},System.Int32)">
-            <summary>
-            
-            </summary>
-            <param name="delay">Задержка в миллисекундах.</param>
+        <member name="M:DanilovSoft.AsyncEx.ThrowHelper.ThrowArgumentNull(System.String)">
+            <exception cref="T:System.ArgumentNullException"/>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.Throttle`1.Invoke(`0)">
-            <exception cref="T:System.ObjectDisposedException"/>
-        </member>
-        <member name="M:DanilovSoft.AsyncEx.Throttle`1.DisposeCore">
-            <returns>True если вызов колбэка гарантированно предотвращён.</returns>
-        </member>
-        <member name="M:DanilovSoft.AsyncEx.Throttle`1.WaitForCallbackToCompleteAsync">
-            <summary>
-            Асинхронно ожидает однократное завершение колбэка или проверяет что колбэк не запущен.
-            </summary>
-        </member>
-        <member name="M:DanilovSoft.AsyncEx.ThrowHelper.ThrowArgumentOutOfRangeException(System.String)">
+        <member name="M:DanilovSoft.AsyncEx.ThrowHelper.ThrowArgumentOutOfRange(System.String)">
             <exception cref="T:System.ArgumentOutOfRangeException"/>
         </member>
         <member name="M:DanilovSoft.AsyncEx.ThrowHelper.ThrowObjectDisposed``1">
             <exception cref="T:System.ObjectDisposedException"/>
-        </member>
-        <member name="T:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute">
-            <summary>
-                Specifies that the method or property will ensure that the listed field and property members have
-                not-<see langword="null"/> values.
-            </summary>
-        </member>
-        <member name="P:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.Members">
-            <summary>
-                Gets field or property member names.
-            </summary>
-        </member>
-        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.#ctor(System.String)">
-            <summary>
-                Initializes the attribute with a field or property member.
-            </summary>
-            <param name="member">
-                The field or property member that is promised to be not-null.
-            </param>
-        </member>
-        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.#ctor(System.String[])">
-            <summary>
-                Initializes the attribute with the list of field and property members.
-            </summary>
-            <param name="members">
-                The list of field and property members that are promised to be not-null.
-            </param>
-        </member>
-        <member name="T:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute">
-            <summary>
-                Specifies that the method or property will ensure that the listed field and property members have
-                non-<see langword="null"/> values when returning with the specified return value condition.
-            </summary>
-        </member>
-        <member name="P:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.ReturnValue">
-            <summary>
-                Gets the return value condition.
-            </summary>
-        </member>
-        <member name="P:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.Members">
-            <summary>
-                Gets field or property member names.
-            </summary>
-        </member>
-        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.#ctor(System.Boolean,System.String)">
-            <summary>
-                Initializes the attribute with the specified return value condition and a field or property member.
-            </summary>
-            <param name="returnValue">
-                The return value condition. If the method returns this value,
-                the associated parameter will not be <see langword="null"/>.
-            </param>
-            <param name="member">
-                The field or property member that is promised to be not-<see langword="null"/>.
-            </param>
-        </member>
-        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.#ctor(System.Boolean,System.String[])">
-            <summary>
-                Initializes the attribute with the specified return value condition and list
-                of field and property members.
-            </summary>
-            <param name="returnValue">
-                The return value condition. If the method returns this value,
-                the associated parameter will not be <see langword="null"/>.
-            </param>
-            <param name="members">
-                The list of field and property members that are promised to be not-null.
-            </param>
         </member>
     </members>
 </doc>

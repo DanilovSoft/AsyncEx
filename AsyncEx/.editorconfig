@@ -142,3 +142,6 @@ dotnet_diagnostic.CS1573.severity = none
 
 # IDE0008: Использование явного типа
 dotnet_diagnostic.IDE0008.severity = none
+
+# CA1031: Не перехватывать исключения общих типов
+dotnet_diagnostic.CA1031.severity = none

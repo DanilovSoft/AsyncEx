@@ -16,13 +16,12 @@ namespace DanilovSoft.AsyncEx
         private readonly TimeSpan _delay;
         private Action<T>? _callback;
         private Timer? _timer;
-        private bool _scheduled;
+        private bool _disposed;
         /// <summary>
         /// Чтение и запись только в блокировке _invokeObj.
         /// </summary>
         [AllowNull] private T _arg;
-        private bool _completed;
-        private bool _disposed;
+        private volatile bool _scheduled;
 
         /// <summary>
         /// 
@@ -65,7 +64,7 @@ namespace DanilovSoft.AsyncEx
                     }
                 }
 
-                Debug.Assert(Volatile.Read(ref _completed));
+                Debug.Assert(Volatile.Read(ref _callback) == null);
             }
         }
 
@@ -118,7 +117,6 @@ namespace DanilovSoft.AsyncEx
                         if (lockTaken)
                         {
                             _callback = null;
-                            _completed = true;
                             return true;
                         }
                         else
@@ -148,16 +146,21 @@ namespace DanilovSoft.AsyncEx
             {
                 arg = _arg;
                 _arg = default;
-                _scheduled = false;
             }
 
             lock (_timerObj)
             {
-                _callback?.Invoke(arg);
+                // Разрешить следующий запуск таймера.
+                _scheduled = false;
 
-                if (Volatile.Read(ref _disposed))
+                if (_callback != null)
                 {
-                    Volatile.Write(ref _completed, true);
+                    _callback.Invoke(arg);
+
+                    if (Volatile.Read(ref _disposed))
+                    {
+                        Volatile.Write(ref _callback, null!);
+                    }
                 }
             }
         }
@@ -174,7 +177,7 @@ namespace DanilovSoft.AsyncEx
         }
 
         /// <summary>
-        /// Асинхронно ожидает однократное завершение колбэка или проверяет что колбэк не запущен.
+        /// Асинхронно ожидает однократное завершение колбэка.
         /// </summary>
         private ValueTask WaitForCallbackToCompleteAsync()
         {
@@ -185,7 +188,7 @@ namespace DanilovSoft.AsyncEx
             return new ValueTask(Task.Factory.StartNew(static async s =>
             {
                 var state = (Throttle<T>)s!;
-                while (!Volatile.Read(ref state._completed))
+                while (Volatile.Read(ref state._callback) != null)
                 {
                     await Task.Yield();
                 }

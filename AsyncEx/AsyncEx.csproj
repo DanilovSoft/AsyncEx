@@ -12,7 +12,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyOriginatorKeyFile>DanilovSoft.AsyncEx.pfx</AssemblyOriginatorKeyFile>
 		<Configurations>Debug;Release;Debug-Work</Configurations>
-		<Version>1.9.7</Version>
+		<Version>1.9.8</Version>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Authors>Vitalii Danilov</Authors>
 		<DocumentationFile>DanilovSoft.AsyncEx.xml</DocumentationFile>

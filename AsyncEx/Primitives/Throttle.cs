@@ -15,12 +15,12 @@ namespace DanilovSoft.AsyncEx
         private readonly object _invokeObj = new();
         private readonly object _timerObj = new();
         private readonly TimeSpan _delay;
-        private Action<T>? _callback;
         private Timer? _timer;
         /// <summary>
         /// Чтение и запись только в блокировке _invokeObj.
         /// </summary>
         [AllowNull] private T _arg;
+        private Action<T>? _callback;
         private volatile bool _disposed;
         private volatile bool _scheduled;
 
@@ -62,13 +62,16 @@ namespace DanilovSoft.AsyncEx
             }
         }
 
+        /// <summary>
+        /// Блокирует поток для ожидания завершения колбэка.
+        /// </summary>
         public void Dispose()
         {
             bool completed = DisposeCore();
 
             if (!completed)
             {
-                // Гарантируем завершение колбэка по выходу из Dispose.
+                // Гарантируем завершение колбэка.
                 bool lockTaken = false;
                 try
                 {
@@ -84,6 +87,10 @@ namespace DanilovSoft.AsyncEx
             }
         }
 
+        /// <summary>
+        /// Использует поток из пула для ожидания завершения колбэка.
+        /// </summary>
+        /// <returns></returns>
         public ValueTask DisposeAsync()
         {
             bool completed = DisposeCore();
@@ -116,6 +123,7 @@ namespace DanilovSoft.AsyncEx
                         Monitor.TryEnter(_timerObj, ref lockTaken);
                         if (lockTaken)
                         {
+                            _scheduled = false;
                             return true;
                         }
                         else
@@ -142,19 +150,27 @@ namespace DanilovSoft.AsyncEx
         private void OnTimer()
         {
             T arg;
+            Action<T>? callback;
             lock (_invokeObj)
             {
                 arg = _arg;
+                callback = _callback;
                 _arg = default;
             }
 
-            lock (_timerObj)
+            if (callback != null)
             {
-                _callback?.Invoke(arg);
-
-                // Разрешить следующий запуск таймера.
-                _scheduled = false;
+                lock (_timerObj)
+                {
+                    if (_scheduled)
+                    {
+                        callback.Invoke(arg);
+                    }
+                }
             }
+
+            // Разрешить следующий запуск таймера.
+            _scheduled = false;
         }
 
         [MemberNotNull(nameof(_timer))]

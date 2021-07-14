@@ -11,7 +11,7 @@ namespace DanilovSoft.AsyncEx
     public sealed class PrioritizedTaskScheduler : TaskScheduler
     {
         // The list of tasks to be executed 
-        private readonly LinkedList<Task> _tasks = new LinkedList<Task>(); // protected by lock(_tasks)
+        private readonly LinkedList<Task> _tasks = new(); // protected by lock(_tasks)
 
         private readonly ThreadPriority _threadsPriority;
 
@@ -26,7 +26,9 @@ namespace DanilovSoft.AsyncEx
         public PrioritizedTaskScheduler(ThreadPriority threadsPriority)
         {
             if (!Enum.IsDefined(typeof(ThreadPriority), _threadsPriority))
+            {
                 throw new ArgumentOutOfRangeException(nameof(threadsPriority));
+            }
 
             _threadsPriority = threadsPriority;
         }
@@ -114,7 +116,9 @@ namespace DanilovSoft.AsyncEx
 
             // Поддерживаем инлайнинг если приоритет потока нам подходит.
             if (Thread.CurrentThread.Priority != _threadsPriority)
+            {
                 return false;
+            }
 
             // If the task was previously queued, remove it from the queue
             if (taskWasPreviouslyQueued)
@@ -125,7 +129,9 @@ namespace DanilovSoft.AsyncEx
                     return TryExecuteTask(task);
                 }
                 else
+                {
                     return false;
+                }
             }
             else
             {
@@ -152,15 +158,21 @@ namespace DanilovSoft.AsyncEx
             try
             {
                 Monitor.TryEnter(_tasks, ref lockTaken);
-                if (lockTaken) 
+                if (lockTaken)
+                {
                     return _tasks;
-                else 
+                }
+                else
+                {
                     throw new NotSupportedException();
+                }
             }
             finally
             {
-                if (lockTaken) 
+                if (lockTaken)
+                {
                     Monitor.Exit(_tasks);
+                }
             }
         }
     }

@@ -29,7 +29,9 @@
         private Task<string> GetOrderProducts(int userId)
         {
             if (userId == 1)
+            {
                 throw new ArgumentOutOfRangeException(nameof(userId));
+            }
 
             return GetOrderProducts2(userId);
         }

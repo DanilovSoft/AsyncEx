@@ -11,7 +11,7 @@ namespace DanilovSoft.AsyncEx
     [DebuggerDisplay(@"\{MaximumConcurrencyLevel = {MaximumConcurrencyLevel}\}")]
     public sealed class CustomPriorityTaskScheduller : TaskScheduler, IDisposable
     {
-        private readonly LinkedList<Task> _tasks = new LinkedList<Task>();
+        private readonly LinkedList<Task> _tasks = new();
         private object SyncObj => _tasks;
         private readonly int _threadsCount;
         // Максимальное число потоков поддерживаемое текущим планировщиком.
@@ -25,10 +25,14 @@ namespace DanilovSoft.AsyncEx
         public CustomPriorityTaskScheduller(int threadsCount, ThreadPriority threadsPriority)
         {
             if (threadsCount <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(threadsCount));
+            }
 
             if (!Enum.IsDefined(typeof(ThreadPriority), threadsPriority))
+            {
                 throw new ArgumentOutOfRangeException(nameof(threadsPriority));
+            }
 
             _threadsCount = threadsCount;
 
@@ -62,7 +66,9 @@ namespace DanilovSoft.AsyncEx
                             Monitor.Wait(SyncObj); // Wait использует барьер памяти (здесь это важно).
                         }
                         else
+                        {
                             return; // Задач больше нет и был сигнал остановки — завершаем поток.
+                        }
                     }
 
                     Debug.Assert(_tasks.First != null, "Нарушение логики работы планировщика");
@@ -96,7 +102,9 @@ namespace DanilovSoft.AsyncEx
                     Monitor.Pulse(SyncObj);
                 }
                 else
+                {
                     throw new ObjectDisposedException(GetType().FullName);
+                }
             }
         }
 
@@ -118,7 +126,9 @@ namespace DanilovSoft.AsyncEx
                         return base.TryExecuteTask(task);
                     }
                     else
+                    {
                         return false;
+                    }
                 }
                 else
                 {
@@ -150,13 +160,17 @@ namespace DanilovSoft.AsyncEx
                 {
                     return _tasks.ToArray(); // Вернуть копию.
                 }
-                else 
+                else
+                {
                     throw new NotSupportedException();
+                }
             }
             finally
             {
                 if (lockTaken)
+                {
                     Monitor.Exit(SyncObj);
+                }
             }
         }
 

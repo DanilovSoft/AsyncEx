@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,11 +17,11 @@ namespace DanilovSoft.AsyncEx
         private readonly TimeSpan _delay;
         private Action<T>? _callback;
         private Timer? _timer;
-        private bool _disposed;
         /// <summary>
         /// Чтение и запись только в блокировке _invokeObj.
         /// </summary>
         [AllowNull] private T _arg;
+        private volatile bool _disposed;
         private volatile bool _scheduled;
 
         /// <summary>
@@ -80,8 +81,6 @@ namespace DanilovSoft.AsyncEx
                         Monitor.Exit(_timerObj);
                     }
                 }
-
-                Debug.Assert(Volatile.Read(ref _callback) == null);
             }
         }
 
@@ -109,6 +108,7 @@ namespace DanilovSoft.AsyncEx
                     _disposed = true;
                     _timer?.Dispose();
                     _timer = null;
+                    _callback = null;
 
                     bool lockTaken = false;
                     try
@@ -116,11 +116,11 @@ namespace DanilovSoft.AsyncEx
                         Monitor.TryEnter(_timerObj, ref lockTaken);
                         if (lockTaken)
                         {
-                            _callback = null;
                             return true;
                         }
                         else
                         {
+                            // Таймер держит блокировку, значит выполняет колбэк.
                             return false;
                         }
                     }
@@ -150,30 +150,25 @@ namespace DanilovSoft.AsyncEx
 
             lock (_timerObj)
             {
+                _callback?.Invoke(arg);
+
                 // Разрешить следующий запуск таймера.
                 _scheduled = false;
-
-                if (_callback != null)
-                {
-                    _callback.Invoke(arg);
-
-                    if (Volatile.Read(ref _disposed))
-                    {
-                        Volatile.Write(ref _callback, null!);
-                    }
-                }
             }
         }
 
         [MemberNotNull(nameof(_timer))]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CheckDisposed()
         {
-            if (_disposed)
+            if (!_disposed)
+            {
+                Debug.Assert(_timer != null);
+            }
+            else
             {
                 ThrowHelper.ThrowObjectDisposed<Throttle<T>>();
             }
-
-            Debug.Assert(_timer != null);
         }
 
         /// <summary>
@@ -188,7 +183,7 @@ namespace DanilovSoft.AsyncEx
             return new ValueTask(Task.Factory.StartNew(static async s =>
             {
                 var state = (Throttle<T>)s!;
-                while (Volatile.Read(ref state._callback) != null)
+                while (state._scheduled)
                 {
                     await Task.Yield();
                 }

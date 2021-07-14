@@ -155,7 +155,9 @@ namespace DanilovSoft.AsyncEx
                 }
             }
             else
+            {
                 throw new ArgumentNullException(nameof(action));
+            }
         }
 
         /// <summary>
@@ -272,7 +274,7 @@ namespace DanilovSoft.AsyncEx
             /// Очередь ожидающий потоков (тасков) претендующих на захват блокировки.
             /// </summary>
             /// <remarks>Доступ только через блокировку <see cref="_syncObj"/>.</remarks>
-            private readonly Queue<TaskCompletionSource<LockReleaser>> _queue = new Queue<TaskCompletionSource<LockReleaser>>();
+            private readonly Queue<TaskCompletionSource<LockReleaser>> _queue = new();
 
             public int Count => _queue.Count;
 

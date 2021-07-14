@@ -44,6 +44,23 @@ namespace DanilovSoft.AsyncEx
             _timer = new Timer(static s => ((Throttle<T>)s!).OnTimer(), this, -1, -1);
         }
 
+        /// <exception cref="ObjectDisposedException"/>
+        public void Invoke(T arg)
+        {
+            lock (_invokeObj)
+            {
+                CheckDisposed();
+
+                _arg = arg;
+
+                if (!_scheduled)
+                {
+                    _scheduled = true;
+                    _timer.Change(_delay, Timeout.InfiniteTimeSpan);
+                }
+            }
+        }
+
         public void Dispose()
         {
             bool completed = DisposeCore();
@@ -79,23 +96,6 @@ namespace DanilovSoft.AsyncEx
             else
             {
                 return WaitForCallbackToCompleteAsync();
-            }
-        }
-
-        /// <exception cref="ObjectDisposedException"/>
-        public void Invoke(T arg)
-        {
-            lock (_invokeObj)
-            {
-                CheckDisposed();
-
-                _arg = arg;
-
-                if (!_scheduled)
-                {
-                    _scheduled = true;
-                    _timer.Change(_delay, Timeout.InfiniteTimeSpan);
-                }
             }
         }
 

@@ -238,6 +238,17 @@
         <member name="M:DanilovSoft.AsyncEx.Throttle`1.Invoke(`0)">
             <exception cref="T:System.ObjectDisposedException"/>
         </member>
+        <member name="M:DanilovSoft.AsyncEx.Throttle`1.Dispose">
+            <summary>
+            Блокирует поток для ожидания завершения колбэка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.Throttle`1.DisposeAsync">
+            <summary>
+            Использует поток из пула для ожидания завершения колбэка.
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:DanilovSoft.AsyncEx.Throttle`1.DisposeCore">
             <returns>True если вызов колбэка гарантированно предотвращён.</returns>
         </member>

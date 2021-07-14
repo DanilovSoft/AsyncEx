@@ -31,13 +31,13 @@ namespace DanilovSoft.AsyncEx
             // Должны или отпустить один из ожидающих Task либо установить сигнальное состояние.
             lock (_awaiters)
             {
-                skip:
+                Skip:
                 if (_awaiters.TryDequeue(out var awaiter))
                 {
                     if (!awaiter.TrySet())
                     {
                         // Редкий случай когда проигрываем гонку с отменой.
-                        goto skip;
+                        goto Skip;
                     }
                 }
                 else

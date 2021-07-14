@@ -15,13 +15,13 @@ namespace DanilovSoft.AsyncEx
         private readonly object _timerObj = new();
         private readonly TimeSpan _delay;
         private Action<T>? _callback;
-        private Timer? _timer;
+        private Task _task = Task.CompletedTask;
         private bool _disposed;
         /// <summary>
         /// Чтение и запись только в блокировке _invokeObj.
         /// </summary>
         [AllowNull] private T _arg;
-        private volatile bool _scheduled;
+        
 
         /// <summary>
         /// 
@@ -35,13 +35,12 @@ namespace DanilovSoft.AsyncEx
         {
             _callback = callback ?? throw new ArgumentNullException(nameof(callback));
 
-            if (delay < TimeSpan.Zero)
+            if (delay <= TimeSpan.Zero)
             {
                 throw new ArgumentOutOfRangeException(nameof(delay));
             }
 
             _delay = delay;
-            _timer = new Timer(static s => ((Throttle<T>)s!).OnTimer(), this, -1, -1);
         }
 
         /// <exception cref="ObjectDisposedException"/>
@@ -53,10 +52,9 @@ namespace DanilovSoft.AsyncEx
 
                 _arg = arg;
 
-                if (!_scheduled)
+                if (_task.IsCompleted)
                 {
-                    _scheduled = true;
-                    _timer.Change(_delay, Timeout.InfiniteTimeSpan);
+                    _task = WaitAsync();
                 }
             }
         }
@@ -99,6 +97,23 @@ namespace DanilovSoft.AsyncEx
             }
         }
 
+        private async Task WaitAsync()
+        {
+            await Task.Delay(_delay).ConfigureAwait(false);
+
+            T arg;
+            lock (_invokeObj)
+            {
+                arg = _arg;
+                _arg = default;
+            }
+
+            if (_callback != null)
+            {
+                _callback.Invoke(arg);
+            }
+        }
+
         /// <returns>True если вызов колбэка гарантированно предотвращён.</returns>
         private bool DisposeCore()
         {
@@ -107,8 +122,6 @@ namespace DanilovSoft.AsyncEx
                 if (!_disposed)
                 {
                     _disposed = true;
-                    _timer?.Dispose();
-                    _timer = null;
 
                     bool lockTaken = false;
                     try
@@ -139,41 +152,12 @@ namespace DanilovSoft.AsyncEx
             }
         }
 
-        private void OnTimer()
-        {
-            T arg;
-            lock (_invokeObj)
-            {
-                arg = _arg;
-                _arg = default;
-            }
-
-            lock (_timerObj)
-            {
-                // Разрешить следующий запуск таймера.
-                _scheduled = false;
-
-                if (_callback != null)
-                {
-                    _callback.Invoke(arg);
-
-                    if (Volatile.Read(ref _disposed))
-                    {
-                        Volatile.Write(ref _callback, null!);
-                    }
-                }
-            }
-        }
-
-        [MemberNotNull(nameof(_timer))]
         private void CheckDisposed()
         {
             if (_disposed)
             {
                 ThrowHelper.ThrowObjectDisposed<Throttle<T>>();
             }
-
-            Debug.Assert(_timer != null);
         }
 
         /// <summary>
@@ -188,7 +172,7 @@ namespace DanilovSoft.AsyncEx
             return new ValueTask(Task.Factory.StartNew(static async s =>
             {
                 var state = (Throttle<T>)s!;
-                while (Volatile.Read(ref state._callback) != null)
+                while (!state._task.IsCompleted)
                 {
                     await Task.Yield();
                 }

@@ -1,38 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.0</TargetFrameworks>
-		<LangVersion>Latest</LangVersion>
-    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
-		<!--<TreatWarningsAsErrors>True</TreatWarningsAsErrors>-->
 		<Nullable>enable</Nullable>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+		<LangVersion>Latest</LangVersion>
 		<AssemblyName>DanilovSoft.AsyncEx</AssemblyName>
 		<RootNamespace>DanilovSoft.AsyncEx</RootNamespace>
 		<SignAssembly>true</SignAssembly>
-		<Nullable>enable</Nullable>
 		<AssemblyOriginatorKeyFile>DanilovSoft.AsyncEx.pfx</AssemblyOriginatorKeyFile>
 		<Configurations>Debug;Release;Debug-Work</Configurations>
-		<Version>1.9.8</Version>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Authors>Vitalii Danilov</Authors>
-		<DocumentationFile>DanilovSoft.AsyncEx.xml</DocumentationFile>
-		<PackageProjectUrl>https://github.com/DanilovSoft/AsyncEx</PackageProjectUrl>
 		<Description>Synchronous and asynchronous primitives and coordinations.</Description>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>async;task;lazyasync;asynclock</PackageTags>
-		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 	</PropertyGroup>
 
-	<!-- Source debugging -->
-	<PropertyGroup>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<EmbedUntrackedSources>true</EmbedUntrackedSources>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-	</PropertyGroup>
-	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
-	</ItemGroup>
+  <!--Для NuGet-->
+  <PropertyGroup>
+    <Version>1.9.8</Version>
+    <PackageProjectUrl>https://github.com/DanilovSoft/AsyncEx</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Authors>dex team</Authors>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+  </ItemGroup>
+  <!--/Для NuGet-->
 
   <ItemGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
     <PackageReference Include="Nullable" Version="1.3.0">

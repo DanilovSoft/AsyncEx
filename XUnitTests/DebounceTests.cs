@@ -12,59 +12,46 @@ namespace XUnitTests
     public class DebounceTests
     {
         [Fact]
-        public void DelayMethod_Success()
+        public void Debounce_Once_Success()
         {
             int controlValue = -1;
 
-            void SomeAction(int value)
-            {
-                controlValue = value;
-            }
-
-            var debounce = new Debounce<int>(SomeAction, TimeSpan.FromMilliseconds(500));
-            try
+            using (var debounce = new Debounce<int>(v => controlValue = v, 200))
             {
                 debounce.Invoke(1);
+                Thread.Sleep(100);
+
+                Assert.Equal(-1, controlValue);
+
                 debounce.Invoke(2);
-                debounce.Invoke(3);
+                Thread.Sleep(150);
 
-                Thread.Sleep(600);
-
-                Assert.Equal(3, controlValue);
-            }
-            finally
-            {
-                debounce.Cancel();
-                debounce.Dispose();
+                Assert.Equal(-1, controlValue);
             }
         }
 
         [Fact]
-        public void CancelAndWait()
+        public void Debounce_Twice_Success()
         {
             int controlValue = -1;
 
-            void SomeAction(int value)
-            {
-                controlValue = value;
-                Thread.Sleep(1000);
-            }
-
-            var debounce = new Debounce<int>(SomeAction, TimeSpan.FromMilliseconds(500));
-            try
+            using (var debounce = new Debounce<int>(v => controlValue = v, 200))
             {
                 debounce.Invoke(1);
-                debounce.Invoke(2);
-                debounce.Invoke(3);
-                Thread.Sleep(600);
-            }
-            finally
-            {
-                debounce.Cancel();
-                debounce.Dispose();
-            }
+                Thread.Sleep(100);
 
-            Assert.Equal(3, controlValue);
+                Assert.Equal(-1, controlValue);
+
+                debounce.Invoke(2);
+                Thread.Sleep(150);
+
+                Assert.Equal(-1, controlValue);
+
+                debounce.Invoke(3);
+                Thread.Sleep(300);
+
+                Assert.Equal(3, controlValue);
+            }
         }
 
         [Fact]
@@ -72,28 +59,42 @@ namespace XUnitTests
         {
             int controlValue = -1;
 
-            void SomeAction(int value)
-            {
-                controlValue = value;
-            }
-
-            var debounce = new Debounce<int>(SomeAction, TimeSpan.FromMilliseconds(500));
-            try
+            using (var debounce = new Debounce<int>(v => controlValue = v, 200))
             {
                 debounce.Invoke(1);
-                debounce.Invoke(2);
-                debounce.Invoke(3);
-                Thread.Sleep(200);
+                Thread.Sleep(100);
             }
-            finally
-            {
-                debounce.Cancel();
-                debounce.Dispose();
-            }
-
-            Thread.Sleep(600);
+            Thread.Sleep(300);
 
             Assert.Equal(-1, controlValue);
+        }
+
+        [Fact]
+        public void WaitDispose()
+        {
+            int controlValue = -1;
+
+            using (var debounce = new Debounce<int>(v => { Thread.Sleep(2000); controlValue = v; }, 100))
+            {
+                debounce.Invoke(1);
+                Thread.Sleep(200);
+            }
+
+            Assert.Equal(1, controlValue);
+        }
+
+        [Fact]
+        public async Task WaitDisposeAsync()
+        {
+            int controlValue = -1;
+
+            await using (var debounce = new Debounce<int>(v => { Thread.Sleep(2000); controlValue = v; }, 100))
+            {
+                debounce.Invoke(1);
+                Thread.Sleep(200);
+            }
+
+            Assert.Equal(1, controlValue);
         }
     }
 }

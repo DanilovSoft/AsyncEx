@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AsyncEx\AsyncEx.csproj" />
+    <ProjectReference Include="..\AsyncEx\DanilovSoft.AsyncEx.csproj" />
   </ItemGroup>
 
 </Project>

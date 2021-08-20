@@ -1,122 +1,55 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace DanilovSoft.AsyncEx
 {
-    // Нужно еще доработать и потом сделать public.
-    // TODO убрать Cancel
-    // Dispose всегда ждёт завершение колбэка.
-    // Асинхронный диспоуз.
-    internal sealed class Debounce<T> : IDisposable
+    // TODO незакончена синхронизация!
+    internal sealed class Debounce<T> : IDisposable, IAsyncDisposable
     {
         private readonly object _invokeObj = new();
         private readonly object _timerObj = new();
-        private readonly TimeSpan _delay;
-        private Action<T>? _callback;
+        private readonly long _delayMsec;
         private Timer? _timer;
         /// <summary>
         /// Чтение и запись только в блокировке _invokeObj.
         /// </summary>
         [AllowNull] private T _arg;
-        /// <summary>
-        /// Чтение и запись только в блокировке _invokeObj.
-        /// </summary>
-        private bool _cancelState;
-        private bool _disposed;
+        private Action<T>? _callback;
+        private volatile bool _disposed;
+        private volatile int _scheduled;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="delay">Задержка в миллисекундах.</param>
-        public Debounce(Action<T> callback, int delay) : this(callback, TimeSpan.FromMilliseconds(delay))
+        public Debounce(Action<T> callback, TimeSpan delay) : this(callback, (long)delay.TotalMilliseconds)
         {
         }
 
-        public Debounce(Action<T> callback, TimeSpan delay)
+        /// <param name="delay">Задержка в миллисекундах.</param>
+        public Debounce(Action<T> callback, long delay)
         {
             _callback = callback ?? throw new ArgumentNullException(nameof(callback));
 
-            if (delay < TimeSpan.Zero)
+            if (delay < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(delay));
             }
 
-            _delay = delay;
+            _delayMsec = delay;
             _timer = new Timer(static s => ((Debounce<T>)s!).OnTimer(), this, -1, -1);
         }
 
+        /// <summary>
+        /// Блокирует поток для ожидания завершения колбэка.
+        /// </summary>
         public void Dispose()
         {
-            if (!_disposed)
+            bool completed = DisposeCore();
+
+            if (!completed)
             {
-                _disposed = true;
-                _timer?.Dispose();
-                _timer = null;
-                _callback = null;
-                _arg = default;
-            }
-        }
-
-        /// <exception cref="ObjectDisposedException"/>
-        public void Invoke(T arg)
-        {
-            CheckDisposed();
-
-            lock (_invokeObj)
-            {
-                _arg = arg;             // 1) Сначала установить аргумент.
-                _cancelState = false;   // 2) Затем снять флаг.
-
-                _timer.Change(_delay, Timeout.InfiniteTimeSpan);
-            }
-        }
-
-        /// <summary>
-        /// Не вызывать одновременно с Invoke.
-        /// </summary>
-        /// <exception cref="ObjectDisposedException"/>
-        public void Cancel(bool waitLastCallback = true)
-        {
-            CheckDisposed();
-
-            lock (_invokeObj)
-            {
-                _cancelState = true;    // 1) Сначала поднять флаг.
-                _arg = default;         // 2) Затем занулить аргумент.
-
-                // Пытаемся отменить тик таймер.
-                _timer.Change(-1, -1);
-                // Помним что таймер всё ещё может сработать.
-
-                if (waitLastCallback)
-                {
-                    if (Monitor.TryEnter(_timerObj))
-                    {
-                        // Успешно захватили лок, значит последующий тик гарантированно увидит флаг и будет no-op.
-
-                        Monitor.Exit(_timerObj);
-                        return;
-                    }
-                }
-            }
-
-            if (waitLastCallback)
-            {
-                // Если дошли сюда, значит таймер находился в процессе выполнения тика.
-                // Нам нужно дождаться завершения именно ЭТОГО тика, для этого будет достаточно факта захвата блокировки.
-
-                // Безобитный нюанс: Если пользователь вопреки документации, одновременно с отменой вызовет Invoke,
-                // тогда есть вероятность что мы встанем на ожидание уже СЛЕДУЮЩЕГО тика таймера.
-
-                // Захватить и отпустить лок таймера.
+                // Гарантируем завершение колбэка.
                 bool lockTaken = false;
                 try
                 {
@@ -132,41 +65,153 @@ namespace DanilovSoft.AsyncEx
             }
         }
 
-        private void OnTimer()
+        /// <summary>
+        /// Использует поток из пула для ожидания завершения колбэка.
+        /// </summary>
+        /// <returns></returns>
+        public ValueTask DisposeAsync()
         {
-            lock (_timerObj)
-            {
-                T arg;
-                lock (_invokeObj)
-                {
-                    if (!_cancelState)
-                    {
-                        arg = _arg;
-                        _arg = default;
-                    }
-                    else
-                    {
-                        return;
-                    }
-                }
+            bool completed = DisposeCore();
 
-                _callback?.Invoke(arg);
+            if (completed)
+            {
+                return default;
+            }
+            else
+            {
+                return WaitForCallbackToCompleteAsync();
             }
         }
 
         /// <exception cref="ObjectDisposedException"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Invoke(T arg)
+        {
+            lock (_invokeObj)
+            {
+                CheckDisposed();
+
+                _arg = arg;
+
+                if (_scheduled != 0)
+                {
+                    _timer.Change(_delayMsec, Timeout.Infinite); // Перезапуск таймера.
+                }
+                else
+                {
+                    _scheduled = 1;
+                    _timer.Change(_delayMsec, Timeout.Infinite);
+                }
+            }
+        }
+
+        private void OnTimer()
+        {
+            T arg;
+            //Action<T>? callback;
+            lock (_invokeObj)
+            {
+                if (_scheduled == 1)
+                {
+                    _scheduled = 2;
+
+                    arg = _arg;
+                    //callback = _callback;
+                    _arg = default;
+                }
+                else
+                {
+                    return; // Другой таймер нас обогнал.
+                }
+            }
+
+
+            lock (_timerObj)
+            {
+                if (_callback != null)
+                {
+                    //if (_scheduled == 2)
+                    {
+                        _callback.Invoke(arg);
+                    }
+                }
+            }
+
+            // Разрешить следующий запуск таймера.
+            _scheduled = 0;
+        }
+
+        /// <returns>True если вызов колбэка гарантированно предотвращён.</returns>
+        private bool DisposeCore()
+        {
+            lock (_invokeObj)
+            {
+                if (!_disposed)
+                {
+                    _disposed = true;
+                    _timer?.Dispose();
+                    _timer = null;
+
+                    bool lockTaken = false;
+                    try
+                    {
+                        Monitor.TryEnter(_timerObj, ref lockTaken);
+                        if (lockTaken)
+                        {
+                            _callback = null;
+                            return true;
+                        }
+                        else
+                        {
+                            // Таймер держит блокировку, значит выполняет колбэк.
+                            return false;
+                        }
+                    }
+                    finally
+                    {
+                        if (lockTaken)
+                        {
+                            Monitor.Exit(_timerObj);
+                        }
+                    }
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
+
         [MemberNotNull(nameof(_timer))]
-        [MemberNotNull(nameof(_callback))]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CheckDisposed()
         {
-            if (_disposed)
+            if (!_disposed)
+            {
+                Debug.Assert(_timer != null);
+            }
+            else
             {
                 ThrowHelper.ThrowObjectDisposed<Debounce<T>>();
             }
+        }
 
-            Debug.Assert(_timer != null);
-            Debug.Assert(_callback != null);
+        /// <summary>
+        /// Асинхронно ожидает однократное завершение колбэка.
+        /// </summary>
+        private ValueTask WaitForCallbackToCompleteAsync()
+        {
+            // The specified callback is actually running: queue an async loop that'll poll for the currently executing
+            // callback to complete. While such polling isn't ideal, we expect this to be a rare case (disposing while
+            // the associated callback is running), and brief when it happens (so the polling will be minimal), and making
+            // this work with a callback mechanism will add additional cost to other more common cases.
+            return new ValueTask(Task.Factory.StartNew(static async s =>
+            {
+                var state = (Debounce<T>)s!;
+                while (state._scheduled != 0)
+                {
+                    await Task.Yield();
+                }
+            }, this, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default).Unwrap());
         }
     }
 }

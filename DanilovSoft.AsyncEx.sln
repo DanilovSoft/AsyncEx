@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsyncEx", "AsyncEx\AsyncEx.csproj", "{20D06CF1-B15D-47AD-8061-A53B75D76783}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DanilovSoft.AsyncEx", "AsyncEx\DanilovSoft.AsyncEx.csproj", "{20D06CF1-B15D-47AD-8061-A53B75D76783}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DebuggingApp", "TestApp\DebuggingApp.csproj", "{9B330D28-63DA-4F7E-94A7-278DFCE64BBE}"
 EndProject

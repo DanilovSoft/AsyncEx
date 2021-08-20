@@ -14,7 +14,12 @@ namespace TestApp
     {
         static async Task Main()
         {
-           
+            var deb = new Debounce<string>(s => _ = s.Length, 10_000);
+
+            deb.Invoke("OK1");
+            Thread.Sleep(10_100);
+            deb.Invoke("OK2");
+            Thread.Sleep(-1);
         }
     }
 }

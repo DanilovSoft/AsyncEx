@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,7 +11,7 @@ namespace DanilovSoft.AsyncEx
     {
         private readonly object _invokeObj = new();
         private readonly object _timerObj = new();
-        private readonly TimeSpan _delay;
+        private readonly long _delayMsec;
         private Timer? _timer;
         /// <summary>
         /// Чтение и запись только в блокировке _invokeObj.
@@ -24,24 +21,21 @@ namespace DanilovSoft.AsyncEx
         private volatile bool _disposed;
         private volatile bool _scheduled;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="delay">Задержка в миллисекундах.</param>
-        public Throttle(Action<T> callback, int delay) : this(callback, TimeSpan.FromMilliseconds(delay))
+        public Throttle(Action<T> callback, TimeSpan delay) : this(callback, (long)delay.TotalMilliseconds)
         {
         }
 
-        public Throttle(Action<T> callback, TimeSpan delay)
+        /// <param name="delay">Задержка в миллисекундах.</param>
+        public Throttle(Action<T> callback, long delay)
         {
             _callback = callback ?? throw new ArgumentNullException(nameof(callback));
 
-            if (delay < TimeSpan.Zero)
+            if (delay < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(delay));
             }
 
-            _delay = delay;
+            _delayMsec = delay;
             _timer = new Timer(static s => ((Throttle<T>)s!).OnTimer(), this, -1, -1);
         }
 
@@ -57,7 +51,7 @@ namespace DanilovSoft.AsyncEx
                 if (!_scheduled)
                 {
                     _scheduled = true;
-                    _timer.Change(_delay, Timeout.InfiniteTimeSpan);
+                    _timer.Change(_delayMsec, Timeout.Infinite);
                 }
             }
         }

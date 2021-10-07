@@ -14,12 +14,28 @@ namespace TestApp
     {
         static async Task Main()
         {
-            var deb = new Debounce<string>(s => _ = s.Length, 10_000);
+            ThrottleExample();
+            Console.ReadKey();
+        }
 
-            deb.Invoke("OK1");
-            Thread.Sleep(10_100);
-            deb.Invoke("OK2");
-            Thread.Sleep(-1);
+        static void ThrottleExample()
+        {
+            using (var throttle = new Throttle<int>(callback: p => UiShowProgress(p), 100))
+            {
+                for (int i = 0; i <= 100; i++)
+                {
+                    throttle.Invoke(i);
+                    Thread.Sleep(10);
+                }
+            }
+
+            // At this point, we know that callback is completed and will no longer be caused by the Throttle.
+            UiShowProgress(100);
+
+            static void UiShowProgress(int progress)
+            {
+                Console.WriteLine(progress);
+            }
         }
     }
 }

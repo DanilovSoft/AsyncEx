@@ -1,14 +1,10 @@
-﻿namespace XUnitTests
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using DanilovSoft.AsyncEx;
-    using Xunit;
+﻿using System;
+using System.Threading.Tasks;
+using DanilovSoft.AsyncEx;
+using Xunit;
 
+namespace XUnitTests
+{
     public class ParallelTransformTest
     {
         [Fact]
@@ -26,6 +22,25 @@
             Assert.True(false);
         }
 
+        [Fact]
+        public async Task TestParallelTransform_Success()
+        {
+            var userIds = new int[] { 123, 456 };
+
+            // Мутация дерева для обогащения свойств товаров значениями.
+            var users = await ParallelTransform.Run(userIds, async x =>
+            {
+                return await GetUserName(x);
+            },
+            (id, n) => new User(id, n), maxDegreeOfParallelism: 10);
+
+            static async Task<string> GetUserName(int userId)
+            {
+                await Task.Delay(100);
+                return "UserName_" + userId;
+            }
+        }
+
         private Task<string> GetOrderProducts(int userId)
         {
             if (userId == 1)
@@ -41,5 +56,7 @@
             await Task.Delay(5_000);
             return userId.ToString();
         }
+
+        private record User(int UserId, string Name);
     }
 }

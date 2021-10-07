@@ -14,3 +14,9 @@ var users2 = await ParallelTransform.Transform(users, x =>
 },
 (User, Orders) => (User.UserId, Orders), maxDegreeOfParallelism: 10);
 ```
+
+```csharp
+
+var lazy = new AsyncLazy<int>(async () => await Task.FromResult(123), cacheFailure: false);
+int value = await lazy.GetValueAsync();
+```

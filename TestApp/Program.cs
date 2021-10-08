@@ -14,28 +14,16 @@ namespace TestApp
     {
         static async Task Main()
         {
-            ThrottleExample();
-            Console.ReadKey();
+            var lazy1 = new AsyncLazy<int>(async () => await GetValue());
+            var lazy2 = new AsyncLazy<int>(async ct => await GetValue(ct));
+            var lazy3 = new AsyncLazy<int>("state", async s => await GetValue());
+            var lazy4 = new AsyncLazy<int>("state", async (s, ct) => await GetValue(ct));
+            var lazy5 = new AsyncLazy<int>("state", async (s, ct) => await GetValue(ct), cacheFailure: false);
         }
 
-        static void ThrottleExample()
+        static async Task<int> GetValue(CancellationToken cancellationToken = default)
         {
-            using (var throttle = new Throttle<int>(callback: p => UiShowProgress(p), 100))
-            {
-                for (int i = 0; i <= 100; i++)
-                {
-                    throttle.Invoke(i);
-                    Thread.Sleep(10);
-                }
-            }
-
-            // At this point, we know that callback is completed and will no longer be caused by the Throttle.
-            UiShowProgress(100);
-
-            static void UiShowProgress(int progress)
-            {
-                Console.WriteLine(progress);
-            }
+            return 1;
         }
     }
 }

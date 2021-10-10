@@ -45,11 +45,6 @@ namespace DanilovSoft.AsyncEx
             _cacheFailure = cacheFailure;
         }
 
-        ///// <summary>
-        ///// The underlying lazy task.
-        ///// </summary>
-        //private volatile Lazy<Task<T>> _lazy;
-
         /// <summary>
         ///  Gets the lazily initialized value of the current <see cref="AsyncLazy{T}"/> instance.
         /// </summary>
@@ -97,6 +92,15 @@ namespace DanilovSoft.AsyncEx
             {
                 var task = _task;
                 return task != null && (task.IsFaulted || task.IsCanceled);
+            }
+        }
+
+        private bool IsRunning
+        {
+            get
+            {
+                var task = _task;
+                return task != null && !task.IsCompleted;
             }
         }
 
@@ -162,7 +166,7 @@ namespace DanilovSoft.AsyncEx
                 _self = self;
             }
 
-            //public bool IsStarted => _self.IsStarted;
+            public bool IsRunning => _self.IsRunning;
 
             public bool IsValueCreated => _self.IsValueCreated;
 

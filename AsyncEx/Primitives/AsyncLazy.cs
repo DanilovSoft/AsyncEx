@@ -85,7 +85,11 @@ public sealed class AsyncLazy<T>
     public T Value
     {
         [DebuggerStepThrough]
-        get => _lazy.Value.GetAwaiter().GetResult();
+        get
+        {
+            throw new NotImplementedException();
+            //return _lazy.Value.GetAwaiter().GetResult();
+        }
     }
 
     /// <summary>
@@ -95,21 +99,29 @@ public sealed class AsyncLazy<T>
     {
         get
         {
-            var lazy = _lazy;
+            throw new NotImplementedException();
+            //var lazy = _lazy;
 
-            if (lazy.IsValueCreated)
-            // Таск уже создан.
-            {
-                Task<T> task = lazy.Value;
-                return task.Status == TaskStatus.RanToCompletion;
-            }
-            return false;
+            //if (lazy.IsValueCreated)
+            //// Таск уже создан.
+            //{
+            //    Task<T> task = lazy.Value;
+            //    return task.Status == TaskStatus.RanToCompletion;
+            //}
+            //return false;
         }
     }
     /// <summary>
     /// Позволяет узнать была ли запущена асинхронная операция.
     /// </summary>
-    private bool IsStarted => _lazy.IsValueCreated;
+    private bool IsStarted
+    {
+        get
+        {
+            throw new NotImplementedException();
+            //return _lazy.IsValueCreated;
+        }
+    }
 
     /// <summary>
     /// Gets the value of the <see cref="AsyncLazy{T}"/> for debugging display purposes.
@@ -118,19 +130,20 @@ public sealed class AsyncLazy<T>
     {
         get
         {
-            var lazy = _lazy;
+            throw new NotImplementedException();
+            //var lazy = _lazy;
 
-            if (lazy.IsValueCreated)
-            // Таск уже создан.
-            {
-                Task<T> task = lazy.Value;
-                if (task.Status == TaskStatus.RanToCompletion)
-                // Таск уже успешно завершен.
-                {
-                    return task.GetAwaiter().GetResult();
-                }
-            }
-            return default;
+            //if (lazy.IsValueCreated)
+            //// Таск уже создан.
+            //{
+            //    Task<T> task = lazy.Value;
+            //    if (task.Status == TaskStatus.RanToCompletion)
+            //    // Таск уже успешно завершен.
+            //    {
+            //        return task.GetAwaiter().GetResult();
+            //    }
+            //}
+            //return default;
         }
     }
 
@@ -141,15 +154,16 @@ public sealed class AsyncLazy<T>
     {
         get
         {
-            var lazy = _lazy;
+            throw new NotImplementedException();
+            //var lazy = _lazy;
 
-            if (lazy.IsValueCreated)
-            // Таск уже создан.
-            {
-                Task<T> task = lazy.Value;
-                return task.IsFaulted || task.IsCanceled;
-            }
-            return false;
+            //if (lazy.IsValueCreated)
+            //// Таск уже создан.
+            //{
+            //    Task<T> task = lazy.Value;
+            //    return task.IsFaulted || task.IsCanceled;
+            //}
+            //return false;
         }
     }
 
@@ -216,8 +230,10 @@ public sealed class AsyncLazy<T>
     {
         try
         {
+            throw new NotImplementedException();
+
             // Тригерим запуск асинхронной операции.
-            _ = _lazy.Value; // Может быть исключение в синхронной части метода фабрики.
+            //_ = _lazy.Value; // Может быть исключение в синхронной части метода фабрики.
         }
         catch { }
     }

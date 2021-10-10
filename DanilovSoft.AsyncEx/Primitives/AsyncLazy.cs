@@ -37,7 +37,7 @@ namespace DanilovSoft.AsyncEx
         /// </summary>
         /// <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
         /// <param name="cacheFailure">If <see langword="false"/> then if the factory method fails, then re-run the factory method the next time instead of caching the failed task.</param>
-        public AsyncLazy(object? state, Func<object?, Task<T>> valueFactory, bool cacheFailure = true)
+        public AsyncLazy(Func<object?, Task<T>> valueFactory, object? state, bool cacheFailure = true)
         {
             _state = state;
             _publicFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));

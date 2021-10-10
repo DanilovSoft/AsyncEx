@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -55,31 +56,8 @@ namespace DanilovSoft.AsyncEx
             }
         }
 
-        //#if NETSTANDARD2_0
-        //        private static async Task DoWaitAsync(Task task, CancellationToken cancellationToken)
-        //        {
-        //            using (var cancelTaskSource = new CancellationTokenTaskSource(cancellationToken))
-        //            {
-        //                await Task.WhenAny(task, cancelTaskSource.Task).Unwrap().ConfigureAwait(false);
-        //            }
-        //        }
-        //#else
-        //        /// <exception cref="OperationCanceledException"/>
-        //        private static async Task DoWaitAsync(Task task, CancellationToken cancellationToken)
-        //        {
-        //            var cancelTaskSource = new CancellationTokenTaskSource(cancellationToken);
-        //            try
-        //            {
-        //                await Task.WhenAny(task, cancelTaskSource.Task).Unwrap().ConfigureAwait(false);
-        //            }
-        //            finally
-        //            {
-        //                await cancelTaskSource.DisposeAsync().ConfigureAwait(false);
-        //            }
-        //        }
-        //#endif
-
         [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool IsCompletedSuccessfully(this Task task)
         {
 #if NETSTANDARD2_0
@@ -87,6 +65,17 @@ namespace DanilovSoft.AsyncEx
 #else
             return task.IsCompletedSuccessfully;
 #endif
+        }
+
+        internal static void ObserveException(this Task task)
+        {
+            if (!task.IsCompletedSuccessfully())
+            {
+                task.ContinueWith(t => { _ = t.Exception; },
+                    CancellationToken.None,
+                    TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, 
+                    TaskScheduler.Default);
+            }
         }
     }
 }

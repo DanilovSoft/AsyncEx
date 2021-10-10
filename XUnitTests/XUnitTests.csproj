@@ -18,8 +18,10 @@
     <PackageReference Include="coverlet.collector" Version="1.0.1" />
   </ItemGroup>
 
+
+
   <ItemGroup>
-    <ProjectReference Include="..\AsyncEx\DanilovSoft.AsyncEx.csproj" />
+    <ProjectReference Include="..\DanilovSoft.AsyncEx\DanilovSoft.AsyncEx.csproj" />
   </ItemGroup>
 
 </Project>

@@ -10,37 +10,38 @@ namespace TestApp
     {
         static async Task Main()
         {
-            //await MainAsync();
+            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
-            var lazy = new AsyncLazy<int>(async ct => await GetValueAsync(ct));
+            var lazy = new AsyncLazy<int>(() => GetValueAsync(), cacheFailure: false);
 
-            //var cts = new CancellationTokenSource(1000);
-            //var task = Task.Run(() => lazy.GetValueAsync(cts.Token));
+            lazy.Start();
 
-            //Thread.Sleep(500);
+            Thread.Sleep(2000);
 
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
 
-            int retryLeft = 1;
-        Retry:
-            var cts2 = new CancellationTokenSource(6000);
-            try
-            {
-                var value = await lazy.GetValueAsync(cts2.Token);
-            }
-            catch (OperationCanceledException) when (!cts2.IsCancellationRequested && retryLeft > 0)
-            // Произошла отмена явно не по нашей инициативе. Но это может быть просто исключение таймаута.
-            {
-                --retryLeft;
-                goto Retry;
-            }
+            Thread.Sleep(-1);
+
+            //try
+            //{
+            //    await lazy.GetValueAsync();
+            //}
+            //catch (Exception ex)
+            //{
+
+            //}
         }
 
-        static async Task<int> GetValueAsync(CancellationToken cancellationToken)
+        private static void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
-            var httpClient = new HttpClient();
-            httpClient.Timeout = TimeSpan.FromMilliseconds(100);
-            await httpClient.GetAsync("https://ya.ru", cancellationToken);
-            return 0;
+            
+        }
+
+        static async Task<int> GetValueAsync()
+        {
+            throw new InvalidOperationException();
         }
 
         static async Task<int> GetValueAsync2(CancellationToken cancellationToken)

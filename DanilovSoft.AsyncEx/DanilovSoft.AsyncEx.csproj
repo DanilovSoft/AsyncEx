@@ -13,7 +13,7 @@
 		<DocumentationFile>DanilovSoft.AsyncEx.xml</DocumentationFile>
 		<Description>Synchronous and asynchronous primitives and coordinations.</Description>
 		<PackageTags>async;task;lazyasync;asynclock</PackageTags>
-		<Version>1.9.8</Version>
+		<Version>1.10.8</Version>
 	</PropertyGroup>
 
 	<!--Для NuGet-->

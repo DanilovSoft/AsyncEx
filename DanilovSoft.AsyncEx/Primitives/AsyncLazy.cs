@@ -13,10 +13,9 @@ namespace DanilovSoft.AsyncEx
     [DebuggerDisplay(@"\{IsValueCreated = {IsValueCreated}\}")]
     public sealed class AsyncLazy<T>
     {
-        private readonly Func<object, object?, Task<T>> _taskFactory;
+        private readonly Func<object?, Task<T>> _taskFactory;
         private readonly bool _cacheFailure;
         private readonly object? _state;
-        private readonly object _publicFactory;
         private Task<T>? _task;
         private object SyncObj => _taskFactory;
 
@@ -25,12 +24,7 @@ namespace DanilovSoft.AsyncEx
         /// </summary>
         /// <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
         /// <param name="cacheFailure">If <see langword="false"/> then if the factory method fails, then re-run the factory method the next time instead of caching the failed task.</param>
-        public AsyncLazy(Func<Task<T>> valueFactory, bool cacheFailure = true)
-        {
-            _publicFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
-            _taskFactory = static (f, _) => ((Func<Task<T>>)f).Invoke();
-            _cacheFailure = cacheFailure;
-        }
+        public AsyncLazy(Func<object?, Task<T>> valueFactory, bool cacheFailure = true) : this(state: null, valueFactory, cacheFailure) {}
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AsyncLazy{T}"/> class.
@@ -40,8 +34,7 @@ namespace DanilovSoft.AsyncEx
         public AsyncLazy(object? state, Func<object?, Task<T>> valueFactory, bool cacheFailure = true)
         {
             _state = state;
-            _publicFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
-            _taskFactory = static (f, s) => ((Func<object?, Task<T>>)f).Invoke(s);
+            _taskFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
             _cacheFailure = cacheFailure;
         }
 
@@ -112,7 +105,7 @@ namespace DanilovSoft.AsyncEx
                     try
                     {
                         // Тригерим запуск асинхронной операции.
-                        _task = _taskFactory.Invoke(_publicFactory, _state);
+                        _task = _taskFactory.Invoke(_state);
                     }
                     catch (Exception ex)
                     {

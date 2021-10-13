@@ -12,7 +12,8 @@ namespace TestApp
         {
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
-            var lazy = new AsyncLazy<int>(() => GetValueAsync(), cacheFailure: false);
+            var lazy = new AsyncLazy<int>(_ => GetValueAsync(), false);
+            var lazy2 = new AsyncLazy<int>(null, _ => GetValueAsync(), false);
 
             lazy.Start();
 

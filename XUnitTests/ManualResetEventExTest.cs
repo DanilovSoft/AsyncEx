@@ -15,7 +15,7 @@ namespace XUnitTests
         [Fact]
         public async Task Release()
         {
-            var a = new AsyncManualResetEventEx();
+            var a = new AsyncManualResetEvent2();
 
             _ = Task.Delay(2000).ContinueWith(_ => a.Set());
 
@@ -28,7 +28,7 @@ namespace XUnitTests
         [Fact]
         public async Task TimedOut()
         {
-            var a = new AsyncManualResetEventEx();
+            var a = new AsyncManualResetEvent2();
 
             var sw = Stopwatch.StartNew();
             bool success = await a.WaitAsync(1000);
@@ -40,7 +40,7 @@ namespace XUnitTests
         [Fact]
         public async Task NotTimedOut()
         {
-            var a = new AsyncManualResetEventEx();
+            var a = new AsyncManualResetEvent2();
 
             _ = Task.Delay(500).ContinueWith(_ => a.Set());
 
@@ -54,7 +54,7 @@ namespace XUnitTests
         [Fact]
         public async Task DelayedCancel()
         {
-            var a = new AsyncManualResetEventEx();
+            var a = new AsyncManualResetEvent2();
 
             using var cts = new CancellationTokenSource(1000);
 
@@ -75,7 +75,7 @@ namespace XUnitTests
         [Fact]
         public async Task DelayedCancelWithTimeout()
         {
-            var a = new AsyncManualResetEventEx();
+            var a = new AsyncManualResetEvent2();
 
             using var cts = new CancellationTokenSource(1000);
 
@@ -96,7 +96,7 @@ namespace XUnitTests
         [Fact]
         public async Task DelayedCancelTimedOut()
         {
-            var a = new AsyncManualResetEventEx();
+            var a = new AsyncManualResetEvent2();
 
             using var cts = new CancellationTokenSource(1000);
 

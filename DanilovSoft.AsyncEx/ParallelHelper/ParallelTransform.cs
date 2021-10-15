@@ -88,7 +88,7 @@ namespace DanilovSoft.AsyncEx
 
                         if (task.IsCompletedSuccessfully())
                         {
-                            TOut result = task.Result;
+                            var result = task.Result;
                             return Task.FromResult(resultSelector(subItem, result));
                         }
                         else

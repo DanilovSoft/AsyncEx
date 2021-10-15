@@ -9,17 +9,17 @@ namespace DanilovSoft.AsyncEx
 {
     [DebuggerDisplay("IsSet = {IsSet}")]
     [DebuggerTypeProxy(typeof(DebugView))]
-    public sealed class AsyncManualResetEventEx
+    public sealed class AsyncManualResetEvent2
     {
         private readonly Queue<QueueAwaiter> _awaiters = new();
         private bool _set;
 
-        public AsyncManualResetEventEx() : this(initialState: false)
+        public AsyncManualResetEvent2() : this(initialState: false)
         {
 
         }
 
-        public AsyncManualResetEventEx(bool initialState)
+        public AsyncManualResetEvent2(bool initialState)
         {
             _set = initialState;
         }
@@ -128,9 +128,9 @@ namespace DanilovSoft.AsyncEx
         [DebuggerNonUserCode]
         private sealed class DebugView
         {
-            private readonly AsyncManualResetEventEx _mre;
+            private readonly AsyncManualResetEvent2 _mre;
 
-            public DebugView(AsyncManualResetEventEx mre)
+            public DebugView(AsyncManualResetEvent2 mre)
             {
                 _mre = mre;
             }

@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{14AB9F4A-F432-429A-9A1A-61087EB9789D}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
+		ReadMe.txt = ReadMe.txt
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DanilovSoft.AsyncEx", "DanilovSoft.AsyncEx\DanilovSoft.AsyncEx.csproj", "{D1F1C94E-4C01-49F5-B738-AAB95DC0C2D3}"

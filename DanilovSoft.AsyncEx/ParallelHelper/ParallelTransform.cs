@@ -42,7 +42,7 @@ namespace DanilovSoft.AsyncEx
                     return Task.FromException(ex);
                 }
 
-                if (task.IsCompletedSuccessfully())
+                if (task.IsCompletedSuccessfully)
                 {
                     InvokeResult = task.Result;
                     return Task.CompletedTask;
@@ -86,7 +86,7 @@ namespace DanilovSoft.AsyncEx
                             return Task.FromException<TRes>(ex);
                         }
 
-                        if (task.IsCompletedSuccessfully())
+                        if (task.IsCompletedSuccessfully)
                         {
                             var result = task.Result;
                             return Task.FromResult(resultSelector(subItem, result));
@@ -300,7 +300,7 @@ namespace DanilovSoft.AsyncEx
                 return Task.FromException<(TInput, TOutput)>(ex);
             }
 
-            if (task.IsCompletedSuccessfully())
+            if (task.IsCompletedSuccessfully)
             {
                 var output = task.Result;
                 return Task.FromResult((input, output));

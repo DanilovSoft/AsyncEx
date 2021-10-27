@@ -136,7 +136,7 @@ namespace DanilovSoft.AsyncEx
         /// </summary>
         public void Start()
         {
-            ThreadPool.UnsafeQueueUserWorkItem(static s =>
+            ThreadPool.QueueUserWorkItem(static s =>
             {
                 s.GetValueAsync().ObserveException();
 

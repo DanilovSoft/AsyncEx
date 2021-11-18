@@ -1,0 +1,10 @@
+[*.cs]
+
+# IDE0040: Добавьте модификаторы доступности
+dotnet_diagnostic.IDE0040.severity = none
+
+# CS1998: В асинхронном методе отсутствуют операторы await, будет выполнен синхронный метод
+dotnet_diagnostic.CS1998.severity = none
+
+# IDE0051: Удалите неиспользуемые закрытые члены
+dotnet_diagnostic.IDE0051.severity = none

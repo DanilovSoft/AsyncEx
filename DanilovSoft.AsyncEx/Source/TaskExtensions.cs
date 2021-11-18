@@ -56,20 +56,20 @@ namespace DanilovSoft.AsyncEx
             }
         }
 
-        [DebuggerStepThrough]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool IsCompletedSuccessfully(this Task task)
-        {
-#if NETSTANDARD2_0
-            return task.Status == TaskStatus.RanToCompletion;
-#else
-            return task.IsCompletedSuccessfully;
-#endif
-        }
+//        [DebuggerStepThrough]
+//        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+//        internal static bool IsCompletedSuccessfully(this Task task)
+//        {
+//#if NETSTANDARD2_0
+//            return task.Status == TaskStatus.RanToCompletion;
+//#else
+//            return task.IsCompletedSuccessfully;
+//#endif
+//        }
 
         internal static void ObserveException(this Task task)
         {
-            if (!task.IsCompletedSuccessfully())
+            if (!task.IsCompletedSuccessfully)
             {
                 task.ContinueWith(t => { _ = t.Exception; },
                     CancellationToken.None,

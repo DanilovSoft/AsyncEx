@@ -6,7 +6,7 @@
 
     <SignAssembly>true</SignAssembly>
 
-    <AssemblyOriginatorKeyFile>DanilovSoft.AsyncEx.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>../DanilovSoft.AsyncEx.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
 

@@ -12,8 +12,8 @@ namespace TestApp
         {
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
-            var lazy = new AsyncLazy<int>(() => GetValueAsync(), cacheFailure: false);
-            var lazy2 = new AsyncLazy<int>(s => GetValueAsync(), null, cacheFailure: false);
+            var lazy = new AsyncLazy<int>(_ => GetValueAsync(), false);
+            var lazy2 = new AsyncLazy<int>(null, _ => GetValueAsync(), false);
 
             lazy.Start();
 
@@ -49,8 +49,10 @@ namespace TestApp
         {
             try
             {
-                var httpClient = new HttpClient();
-                httpClient.Timeout = TimeSpan.FromMilliseconds(100);
+                var httpClient = new HttpClient
+                {
+                    Timeout = TimeSpan.FromMilliseconds(100)
+                };
                 await httpClient.GetAsync("https://ya.ru", cancellationToken);
             }
             catch (OperationCanceledException ex)
@@ -70,12 +72,6 @@ namespace TestApp
                 throw;
             }
             return 0;
-        }
-
-        static async Task MainAsync()
-        {
-            var cts = new CancellationTokenSource(200);
-            await GetValueAsync2(cts.Token);
         }
     }
 

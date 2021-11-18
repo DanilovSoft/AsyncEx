@@ -32,7 +32,7 @@
             </summary>
             <typeparam name="T">The type of object that is being asynchronously initialized.</typeparam>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.#ctor(System.Func{System.Threading.Tasks.Task{`0}},System.Boolean)">
+        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.#ctor(System.Func{System.Object,System.Threading.Tasks.Task{`0}},System.Boolean)">
             <summary>
             Initializes a new instance of the <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> class.
             </summary>
@@ -76,7 +76,7 @@
             Starts the asynchronous initialization, if it has not already started.
             </summary>
         </member>
-        <member name="T:DanilovSoft.AsyncEx.AsyncLazy`1.System_LazyDebugView">
+        <member name="T:DanilovSoft.AsyncEx.AsyncLazy`1.LazyDebugView">
             <summary>A debugger view of the <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> to surface additional debugging properties and 
             to ensure that the <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> does not become initialized if it was not already.
             </summary>
@@ -142,20 +142,20 @@
             Сколько потоков (тасков) ожидают блокировку.
             </summary>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncManualResetEventEx.WaitAsync(System.Int32)">
+        <member name="M:DanilovSoft.AsyncEx.AsyncManualResetEvent2.WaitAsync(System.Int32)">
             <exception cref="T:System.ArgumentOutOfRangeException"/>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncManualResetEventEx.WaitAsync(System.TimeSpan)">
+        <member name="M:DanilovSoft.AsyncEx.AsyncManualResetEvent2.WaitAsync(System.TimeSpan)">
             <exception cref="T:System.ArgumentOutOfRangeException"/>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncManualResetEventEx.WaitAsync(System.TimeSpan,System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.AsyncEx.AsyncManualResetEvent2.WaitAsync(System.TimeSpan,System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
             <exception cref="T:System.ArgumentOutOfRangeException"/>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncManualResetEventEx.WaitAsync(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.AsyncEx.AsyncManualResetEvent2.WaitAsync(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncManualResetEventEx.WaitAsync(System.Int32,System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.AsyncEx.AsyncManualResetEvent2.WaitAsync(System.Int32,System.Threading.CancellationToken)">
             <exception cref="T:System.ArgumentOutOfRangeException"/>
             <exception cref="T:System.OperationCanceledException"/>
         </member>
@@ -253,17 +253,6 @@
             </summary>
             <remarks>Потокобезопасно.</remarks>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.TaskEx.WhenAllOrAnyException(System.Threading.Tasks.Task[])">
-            <remarks>Проглатывает последующие исключения.</remarks>
-        </member>
-        <member name="M:DanilovSoft.AsyncEx.TaskEx.WhenAllOrAnyException(System.Collections.Generic.IEnumerable{System.Threading.Tasks.Task})">
-            <remarks>Проглатывает последующие исключения.</remarks>
-        </member>
-        <member name="M:DanilovSoft.AsyncEx.TaskEx.Run``2(System.Func{``0,System.Threading.Tasks.Task{``1}},``0)">
-            <summary>
-            Шорткат для Task.Run(() =>
-            </summary>
-        </member>
         <member name="M:DanilovSoft.AsyncEx.TaskExtensions.WaitAsync(System.Threading.Tasks.Task,System.Threading.CancellationToken)">
             <summary>
             Asynchronously waits for the task to complete, or for the cancellation token to be canceled.
@@ -274,6 +263,17 @@
         </member>
         <member name="M:DanilovSoft.AsyncEx.TaskExtensions.DoWaitAsync(System.Threading.Tasks.Task,System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.TaskHelper.WhenAllOrAnyException(System.Threading.Tasks.Task[])">
+            <remarks>Проглатывает последующие исключения.</remarks>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.TaskHelper.WhenAllOrAnyException(System.Collections.Generic.IEnumerable{System.Threading.Tasks.Task})">
+            <remarks>Проглатывает последующие исключения.</remarks>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.TaskHelper.Run``2(System.Func{``0,System.Threading.Tasks.Task{``1}},``0)">
+            <summary>
+            Шорткат для Task.Run(() =>
+            </summary>
         </member>
         <member name="M:DanilovSoft.AsyncEx.ThrowHelper.ArgumentNotNull``1(``0,System.String)">
             <exception cref="T:System.ArgumentNullException"/>

@@ -10,7 +10,7 @@ namespace XUnitTests
         [Fact]
         public async Task Test1()
         {
-            var lazy = new AsyncLazy<int>(async () => await Task.FromResult(123), cacheFailure: false);
+            var lazy = new AsyncLazy<int>(async delegate { return await Task.FromResult(123); }, cacheFailure: false);
             int value = await lazy.GetValueAsync();
             Assert.Equal(123, value);
         }
@@ -20,7 +20,7 @@ namespace XUnitTests
         {
             int tryes = 0;
 
-            var lazy = new AsyncLazy<int>(async () => 
+            var lazy = new AsyncLazy<int>(async delegate
             {
                 await Task.Delay(500);
 
@@ -52,7 +52,7 @@ namespace XUnitTests
         [Fact]
         public async Task TestSyncException()
         {
-            var lazy = new AsyncLazy<int>(() =>
+            var lazy = new AsyncLazy<int>(delegate
             {
                 throw new InvalidOperationException();
                 return Task.FromResult(0);

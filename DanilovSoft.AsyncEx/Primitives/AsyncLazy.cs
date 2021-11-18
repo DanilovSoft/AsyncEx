@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DanilovSoft.AsyncEx.Helpers;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,28 +10,23 @@ namespace DanilovSoft.AsyncEx
     /// Provides support for asynchronous lazy initialization. This type is fully threadsafe.
     /// </summary>
     /// <typeparam name="T">The type of object that is being asynchronously initialized.</typeparam>
-    [DebuggerTypeProxy(typeof(AsyncLazy<>.System_LazyDebugView))]
+    [DebuggerTypeProxy(typeof(AsyncLazy<>.LazyDebugView))]
     [DebuggerDisplay(@"\{IsValueCreated = {IsValueCreated}\}")]
     public sealed class AsyncLazy<T>
     {
-        private readonly Func<object, object?, Task<T>> _taskFactory;
+        private readonly object _syncObj = new();
+        private readonly Func<object?, Task<T>> _taskFactory;
         private readonly bool _cacheFailure;
         private readonly object? _state;
-        private readonly object _publicFactory;
         private Task<T>? _task;
-        private object SyncObj => _taskFactory;
+        private object SyncObj => _syncObj;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AsyncLazy{T}"/> class.
         /// </summary>
         /// <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
         /// <param name="cacheFailure">If <see langword="false"/> then if the factory method fails, then re-run the factory method the next time instead of caching the failed task.</param>
-        public AsyncLazy(Func<Task<T>> valueFactory, bool cacheFailure = true)
-        {
-            _publicFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
-            _taskFactory = static (f, _) => ((Func<Task<T>>)f).Invoke();
-            _cacheFailure = cacheFailure;
-        }
+        public AsyncLazy(Func<object?, Task<T>> valueFactory, bool cacheFailure = true) : this(state: null, valueFactory, cacheFailure) {}
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AsyncLazy{T}"/> class.
@@ -40,8 +36,7 @@ namespace DanilovSoft.AsyncEx
         public AsyncLazy(Func<object?, Task<T>> valueFactory, object? state, bool cacheFailure = true)
         {
             _state = state;
-            _publicFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
-            _taskFactory = static (f, s) => ((Func<object?, Task<T>>)f).Invoke(s);
+            _taskFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
             _cacheFailure = cacheFailure;
         }
 
@@ -63,7 +58,7 @@ namespace DanilovSoft.AsyncEx
             get
             {
                 var task = _task;
-                return task != null && task.IsCompletedSuccessfully();
+                return task != null && task.IsCompletedSuccessfully;
             }
         }
 
@@ -75,7 +70,7 @@ namespace DanilovSoft.AsyncEx
             get
             {
                 var task = _task;
-                if (task != null && task.IsCompletedSuccessfully())
+                if (task != null && task.IsCompletedSuccessfully)
                 {
                     return task.Result;
                 }
@@ -90,8 +85,15 @@ namespace DanilovSoft.AsyncEx
         {
             get
             {
-                var task = _task;
-                return task != null && (task.IsFaulted || task.IsCanceled);
+                if (!_cacheFailure)
+                {
+                    return false;
+                }
+                else
+                {
+                    var task = _task;
+                    return task != null && (task.IsFaulted || task.IsCanceled);
+                }
             }
         }
 
@@ -111,34 +113,7 @@ namespace DanilovSoft.AsyncEx
         {
             lock (SyncObj)
             {
-                if (_task == null || !_cacheFailure && (_task.IsFaulted || _task.IsCanceled))
-                {
-                    try
-                    {
-                        // Тригерим запуск асинхронной операции.
-                        _task = _taskFactory.Invoke(_publicFactory, _state);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (_cacheFailure)
-                        {
-                            _task = Task.FromException<T>(ex);
-                        }
-                        else
-                        {
-                            _task = null;
-                            return Task.FromException<T>(ex);
-                        }
-                    }
-
-                    if (!_cacheFailure && (_task.IsFaulted || _task.IsCanceled))
-                    {
-                        var task = _task;
-                        _task = null;
-                        return task;
-                    }
-                }
-                return _task;
+                return GetValueCore();
             }
         }
 
@@ -147,26 +122,58 @@ namespace DanilovSoft.AsyncEx
         /// </summary>
         public void Start()
         {
-            ThreadPool.UnsafeQueueUserWorkItem(static s =>
+            ThreadPool.QueueUserWorkItem(static s =>
             {
                 s.GetValueAsync().ObserveException();
 
             }, this, preferLocal: true);
         }
 
+        private Task<T> GetValueCore()
+        {
+            Debug.Assert(Monitor.IsEntered(SyncObj));
+
+            if (_task == null || !_cacheFailure && (_task.IsFaulted || _task.IsCanceled))
+            {
+                try
+                {
+                    // Тригерим запуск асинхронной операции.
+                    _task = _taskFactory.Invoke(_state);
+                }
+                catch (Exception ex)
+                {
+                    if (_cacheFailure)
+                    {
+                        _task = Task.FromException<T>(ex);
+                    }
+                    else
+                    {
+                        _task = null;
+                        return Task.FromException<T>(ex);
+                    }
+                }
+
+                // В таске уже могла быть агрегирована ошибка.
+                if (!_cacheFailure && (_task.IsFaulted || _task.IsCanceled))
+                {
+                    // Вернуть ошибку и больше не хранить.
+                    return NullableHelper.SetNull(ref _task);
+                }
+            }
+            return _task;
+        }
+
         /// <summary>A debugger view of the <see cref="AsyncLazy{T}"/> to surface additional debugging properties and 
         /// to ensure that the <see cref="AsyncLazy{T}"/> does not become initialized if it was not already.
         /// </summary>
-        private sealed class System_LazyDebugView
+        private sealed class LazyDebugView
         {
             private readonly AsyncLazy<T> _self;
 
-            public System_LazyDebugView(AsyncLazy<T> self)
+            public LazyDebugView(AsyncLazy<T> self)
             {
                 _self = self;
             }
-
-            public bool IsRunning => _self.IsRunning;
 
             public bool IsValueCreated => _self.IsValueCreated;
 

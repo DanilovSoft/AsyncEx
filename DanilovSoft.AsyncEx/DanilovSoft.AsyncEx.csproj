@@ -13,6 +13,7 @@
 		<Description>Synchronous and asynchronous primitives and coordinations.</Description>
 		<PackageTags>async;task;lazyasync;asynclock</PackageTags>
 		<Version>1.11.2</Version>
+		<InvariantGlobalization>true</InvariantGlobalization>
 	</PropertyGroup>
 
 	<!--Для NuGet-->

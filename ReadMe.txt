@@ -1,3 +1,3 @@
-Установка ключа строгого имени:
-Запустить Developer PowerShell
+РЈСЃС‚Р°РЅРѕРІРєР° РєР»СЋС‡Р° СЃС‚СЂРѕРіРѕРіРѕ РёРјРµРЅРё:
+Р—Р°РїСѓСЃС‚РёС‚СЊ Developer PowerShell
 	sn -i DanilovSoft.AsyncEx.pfx VS_KEY_***************

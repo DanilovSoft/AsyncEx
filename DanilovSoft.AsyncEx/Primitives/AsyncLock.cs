@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -28,7 +27,7 @@ namespace DanilovSoft.AsyncEx
         /// Может только увеличиваться.
         /// </summary>
         /// <remarks>Превентивная защита от освобождения блокировки чужим потоком.</remarks>
-        internal short _releaseTaskToken;
+        internal short ReleaseTaskToken;
 
         /// <summary>
         /// Когда блокировка захвачена таском.
@@ -49,33 +48,28 @@ namespace DanilovSoft.AsyncEx
         /// <returns>Ресурс удерживающий блокировку.</returns>
         public ValueTask<LockReleaser> LockAsync()
         {
-            // Попытка захватить блокировку атомарно.
+            // Попытка захватить блокировку атомарно (Fast-Path).
             bool taken = Interlocked.CompareExchange(ref _taken, 1, 0) == 0;
-
-            if (taken) // Захватили блокировку.
+            if (taken)
             {
-                // Несмотря на то что мы не захватили _syncObj,
+                // Несмотря на то что мы НЕ захватили _syncObj,
                 // другие потоки не могут вызвать CreateNextReleaser одновременно с нами.
-
-                LockReleaser releaser = CreateNextReleaser();
-
-                return new ValueTask<LockReleaser>(result: releaser);
+                var releaser = CreateNextReleaser();
+                return ValueTask.FromResult(releaser);
             }
             else
             {
-                lock (_syncObj)
+                lock (_syncObj) // Slow-Path.
                 {
                     if (_taken == 1) // Блокировка занята другим потоком -> становимся в очередь.
                     {
-                        return new ValueTask<LockReleaser>(task: _queue.EnqueueAndWait());
+                        return new(task: _queue.EnqueueAndWait());
                     }
                     else
                     {
                         _taken = 1;
-
                         var releaser = SafeCreateNextReleaser();
-
-                        return new ValueTask<LockReleaser>(result: releaser);
+                        return ValueTask.FromResult(releaser);
                     }
                 }
             }
@@ -87,11 +81,11 @@ namespace DanilovSoft.AsyncEx
         internal void ReleaseLock(LockReleaser userReleaser)
         {
             Debug.Assert(_taken == 1, "Нарушение порядка захвата блокировки");
-            Debug.Assert(userReleaser.ReleaseToken == _releaseTaskToken, "Освобождения блокировки чужим потоком");
+            Debug.Assert(userReleaser.ReleaseToken == ReleaseTaskToken, "Освобождение блокировки чужим потоком");
 
             lock (_syncObj)
             {
-                if (userReleaser.ReleaseToken == _releaseTaskToken) // У текущего потока (релизера) есть право освободить блокировку.
+                if (userReleaser.ReleaseToken == ReleaseTaskToken) // У текущего потока (релизера) есть право освободить блокировку.
                 {
                     if (_queue.Count == 0) // Больше потоков нет -> освободить блокировку.
                     {
@@ -112,7 +106,7 @@ namespace DanilovSoft.AsyncEx
         /// <summary>
         /// Увеличивает идентификатор что-бы инвалидировать все ранее созданные <see cref="LockReleaser"/>.
         /// </summary>
-        /// <remarks>Увеличивает <see cref="_releaseTaskToken"/>.</remarks>
+        /// <remarks>Увеличивает <see cref="ReleaseTaskToken"/>.</remarks>
         /// <returns><see cref="LockReleaser"/> у которого есть эксклюзивное право освободить текущую блокировку.</returns>
         private LockReleaser CreateNextReleaser()
         {
@@ -133,11 +127,11 @@ namespace DanilovSoft.AsyncEx
         /// <summary>
         /// Предотвращает освобождение блокировки чужим потоком.
         /// </summary>
-        /// <remarks>Увеличивает <see cref="_releaseTaskToken"/>.</remarks>
+        /// <remarks>Увеличивает <see cref="ReleaseTaskToken"/>.</remarks>
         private short GetNextReleaserToken()
         {
             Debug.Assert(_taken == 1);
-            return ++_releaseTaskToken;
+            return ++ReleaseTaskToken;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

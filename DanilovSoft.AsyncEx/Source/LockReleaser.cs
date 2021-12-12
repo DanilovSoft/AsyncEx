@@ -1,11 +1,10 @@
-﻿namespace DanilovSoft.AsyncEx
-{
-    using System;
-    using System.Diagnostics;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Runtime.InteropServices;
-    using System.Threading;
+﻿using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
+namespace DanilovSoft.AsyncEx
+{
     /// <summary>
     /// Держит блокировку <see cref="AsyncLock"/> до вызова Dispose.
     /// </summary>
@@ -19,7 +18,7 @@
         /// <summary>
         /// Токен который изначально имел право выполнить освобождение блокировки.
         /// </summary>
-        /// <remarks>Сверяется с <see cref="AsyncLock._releaseTaskToken"/> в момент Dispose 
+        /// <remarks>Сверяется с <see cref="AsyncLock.ReleaseTaskToken"/> в момент Dispose 
         /// для проверки права освобождения блокировки (предотвращение повторного Dispose).</remarks>
         internal readonly short ReleaseToken;
 
@@ -47,7 +46,7 @@
             }
 
             public AsyncLock Locker => _self._context;
-            public bool Disposed => _self._context._releaseTaskToken != _self.ReleaseToken;
+            public bool Disposed => _self._context.ReleaseTaskToken != _self.ReleaseToken;
         }
     }
 }

@@ -87,7 +87,7 @@
             </summary>
             <remarks>Доступ через блокировку <see cref="F:DanilovSoft.AsyncEx.AsyncLock._syncObj"/></remarks>
         </member>
-        <member name="F:DanilovSoft.AsyncEx.AsyncLock._releaseTaskToken">
+        <member name="F:DanilovSoft.AsyncEx.AsyncLock.ReleaseTaskToken">
             <summary>
             Токен для потока у которого есть право освободить блокировку.
             Может только увеличиваться.
@@ -117,14 +117,14 @@
             <summary>
             Увеличивает идентификатор что-бы инвалидировать все ранее созданные <see cref="T:DanilovSoft.AsyncEx.LockReleaser"/>.
             </summary>
-            <remarks>Увеличивает <see cref="F:DanilovSoft.AsyncEx.AsyncLock._releaseTaskToken"/>.</remarks>
+            <remarks>Увеличивает <see cref="F:DanilovSoft.AsyncEx.AsyncLock.ReleaseTaskToken"/>.</remarks>
             <returns><see cref="T:DanilovSoft.AsyncEx.LockReleaser"/> у которого есть эксклюзивное право освободить текущую блокировку.</returns>
         </member>
         <member name="M:DanilovSoft.AsyncEx.AsyncLock.GetNextReleaserToken">
             <summary>
             Предотвращает освобождение блокировки чужим потоком.
             </summary>
-            <remarks>Увеличивает <see cref="F:DanilovSoft.AsyncEx.AsyncLock._releaseTaskToken"/>.</remarks>
+            <remarks>Увеличивает <see cref="F:DanilovSoft.AsyncEx.AsyncLock.ReleaseTaskToken"/>.</remarks>
         </member>
         <member name="F:DanilovSoft.AsyncEx.AsyncLock.WaitQueue._queue">
             <summary>
@@ -244,7 +244,7 @@
             <summary>
             Токен который изначально имел право выполнить освобождение блокировки.
             </summary>
-            <remarks>Сверяется с <see cref="F:DanilovSoft.AsyncEx.AsyncLock._releaseTaskToken"/> в момент Dispose 
+            <remarks>Сверяется с <see cref="F:DanilovSoft.AsyncEx.AsyncLock.ReleaseTaskToken"/> в момент Dispose 
             для проверки права освобождения блокировки (предотвращение повторного Dispose).</remarks>
         </member>
         <member name="M:DanilovSoft.AsyncEx.LockReleaser.Dispose">

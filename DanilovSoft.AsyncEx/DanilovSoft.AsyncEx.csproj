@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net5.0;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net6.0;net5.0</TargetFrameworks>
 		<LangVersion>Latest</LangVersion>
 		<AnalysisMode>AllEnabledByDefault</AnalysisMode>
 		<Nullable>enable</Nullable>
@@ -8,11 +8,13 @@
 		<RootNamespace>DanilovSoft.AsyncEx</RootNamespace>
 		<SignAssembly>True</SignAssembly>
 		<Nullable>enable</Nullable>
-		<AssemblyOriginatorKeyFile>../DanilovSoft.AsyncEx.pfx</AssemblyOriginatorKeyFile>
+		<AssemblyOriginatorKeyFile>DanilovSoft.AsyncEx.pfx</AssemblyOriginatorKeyFile>
 		<DocumentationFile>DanilovSoft.AsyncEx.xml</DocumentationFile>
 		<Description>Synchronous and asynchronous primitives and coordinations.</Description>
 		<PackageTags>async;task;lazyasync;asynclock</PackageTags>
-		<Version>1.11.0</Version>
+		<Version>1.11.2</Version>
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<PublicSign>false</PublicSign>
 	</PropertyGroup>
 
 	<!--Для NuGet-->

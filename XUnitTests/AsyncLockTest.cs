@@ -1,6 +1,4 @@
 ﻿using System.Threading.Tasks;
-using DanilovSoft.AsyncEx;
-using Xunit;
 
 namespace XUnitTests
 {

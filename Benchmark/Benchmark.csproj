@@ -3,10 +3,13 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
-	  <AnalysisMode>AllDisabledByDefault</AnalysisMode>
+    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <StartupObject>TestApp.Program</StartupObject>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DanilovSoft.AsyncEx\DanilovSoft.AsyncEx.csproj" />

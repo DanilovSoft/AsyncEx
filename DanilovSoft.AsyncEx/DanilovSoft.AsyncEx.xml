@@ -32,14 +32,24 @@
             </summary>
             <typeparam name="T">The type of object that is being asynchronously initialized.</typeparam>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.#ctor(System.Func{System.Object,System.Threading.Tasks.Task{`0}},System.Boolean)">
+        <member name="F:DanilovSoft.AsyncEx.AsyncLazy`1._syncObj">
+            <summary>
+            Для манипуляций над <see cref="F:DanilovSoft.AsyncEx.AsyncLazy`1._task"/>.
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.AsyncEx.AsyncLazy`1._task">
+            <summary>
+            Любые манипуляции через блокировку <see cref="F:DanilovSoft.AsyncEx.AsyncLazy`1._syncObj"/>.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.#ctor(System.Func{System.Object,System.Threading.CancellationToken,System.Threading.Tasks.Task{`0}},System.Boolean)">
             <summary>
             Initializes a new instance of the <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> class.
             </summary>
             <param name="valueFactory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
             <param name="cacheFailure">If <see langword="false"/> then if the factory method fails, then re-run the factory method the next time instead of caching the failed task.</param>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.#ctor(System.Object,System.Func{System.Object,System.Threading.Tasks.Task{`0}},System.Boolean)">
+        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.#ctor(System.Func{System.Object,System.Threading.CancellationToken,System.Threading.Tasks.Task{`0}},System.Object,System.Boolean)">
             <summary>
             Initializes a new instance of the <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> class.
             </summary>
@@ -66,7 +76,7 @@
             Gets whether the value creation is faulted or not.
             </summary>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.GetValueAsync">
+        <member name="M:DanilovSoft.AsyncEx.AsyncLazy`1.GetValueAsync(System.Threading.CancellationToken)">
             <summary>
              Gets the lazily initialized value of the current <see cref="T:DanilovSoft.AsyncEx.AsyncLazy`1"/> instance.
             </summary>

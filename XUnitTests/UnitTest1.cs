@@ -1,9 +1,7 @@
-using DanilovSoft.AsyncEx;
-using DanilovSoft.Threading;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
 
 namespace XUnitTests
 {
@@ -14,7 +12,7 @@ namespace XUnitTests
         {
             var cts = new CancellationTokenSource();
             cts.Cancel();
-            var ctts = new CancellationTokenTaskSource(cts.Token);
+            var ctts = new DanilovSoft.Threading.CancellationTokenTaskSource(cts.Token);
 
             try
             {

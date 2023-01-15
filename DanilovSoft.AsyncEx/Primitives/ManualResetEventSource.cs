@@ -145,7 +145,7 @@ namespace DanilovSoft.AsyncEx
         public T Wait()
         {
             // С бесконечным таймаутом всегда возвращает True.
-            Wait(Timeout.InfiniteTimeSpan, out T? item);
+            Wait(Timeout.InfiniteTimeSpan, out var item);
             return item!;
         }
 

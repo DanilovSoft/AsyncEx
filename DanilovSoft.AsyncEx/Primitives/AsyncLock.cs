@@ -49,7 +49,7 @@ namespace DanilovSoft.AsyncEx
         public ValueTask<LockReleaser> LockAsync()
         {
             // Попытка захватить блокировку атомарно (Fast-Path).
-            bool taken = Interlocked.CompareExchange(ref _taken, 1, 0) == 0;
+            var taken = Interlocked.CompareExchange(ref _taken, 1, 0) == 0;
             if (taken)
             {
                 // Несмотря на то что мы НЕ захватили _syncObj,
@@ -178,7 +178,7 @@ namespace DanilovSoft.AsyncEx
                 // Взять первый поток в очереди.
                 var tcs = _queue.Dequeue();
 
-                bool success = tcs.TrySetResult(releaser);
+                var success = tcs.TrySetResult(releaser);
                 Debug.Assert(success);
             }
         }

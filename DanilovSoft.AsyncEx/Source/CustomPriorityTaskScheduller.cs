@@ -36,7 +36,7 @@ namespace DanilovSoft.AsyncEx
 
             _threadsCount = threadsCount;
 
-            for (int i = 0; i < threadsCount; i++)
+            for (var i = 0; i < threadsCount; i++)
             {
                 var t = new Thread(ThreadEntryPoint);
                 t.IsBackground = true;
@@ -152,7 +152,7 @@ namespace DanilovSoft.AsyncEx
             // When this method is called, all other threads in the process will be frozen.
             // Поэтому мы не можем синхронизироваться с другими потоками и в этом случае ДОЛЖНЫ бросить исключение.
 
-            bool lockTaken = false;
+            var lockTaken = false;
             try
             {
                 Monitor.TryEnter(SyncObj, ref lockTaken);

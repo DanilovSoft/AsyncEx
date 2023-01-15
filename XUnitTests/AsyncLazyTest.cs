@@ -9,14 +9,14 @@ namespace XUnitTests
         public async Task Test1()
         {
             var lazy = new AsyncLazy<int>(async delegate { return await Task.FromResult(123); }, cacheFailure: false);
-            int value = await lazy.GetValueAsync();
+            var value = await lazy.GetValueAsync();
             Assert.Equal(123, value);
         }
 
         [Fact]
         public async Task TestExceptionCache()
         {
-            int tryes = 0;
+            var tryes = 0;
 
             var lazy = new AsyncLazy<int>(async delegate
             {

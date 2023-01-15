@@ -45,12 +45,12 @@ namespace DanilovSoft.AsyncEx
         /// </summary>
         public void Dispose()
         {
-            bool completed = DisposeCore();
+            var completed = DisposeCore();
 
             if (!completed)
             {
                 // Гарантируем завершение колбэка.
-                bool lockTaken = false;
+                var lockTaken = false;
                 try
                 {
                     Monitor.Enter(_timerObj, ref lockTaken);
@@ -71,7 +71,7 @@ namespace DanilovSoft.AsyncEx
         /// <returns></returns>
         public ValueTask DisposeAsync()
         {
-            bool completed = DisposeCore();
+            var completed = DisposeCore();
 
             if (completed)
             {
@@ -151,7 +151,7 @@ namespace DanilovSoft.AsyncEx
                     _timer?.Dispose();
                     _timer = null;
 
-                    bool lockTaken = false;
+                    var lockTaken = false;
                     try
                     {
                         Monitor.TryEnter(_timerObj, ref lockTaken);

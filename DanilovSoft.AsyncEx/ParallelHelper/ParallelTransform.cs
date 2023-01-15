@@ -47,13 +47,11 @@ namespace DanilovSoft.AsyncEx
                     InvokeResult = task.Result;
                     return Task.CompletedTask;
                 }
-                else
+
+                return WaitAsync(task);
+                async Task WaitAsync(Task<TOutput> task)
                 {
-                    return WaitAsync(task, this);
-                    static async Task WaitAsync(Task<TOutput> task, Aggregator<TOutput, TFunc, TSubItem, TSelector> self)
-                    {
-                        self.InvokeResult = await task.ConfigureAwait(false);
-                    }
+                    InvokeResult = await task.ConfigureAwait(false);
                 }
             }
         }
@@ -72,7 +70,7 @@ namespace DanilovSoft.AsyncEx
                 Func<TIn, Task<TOut>> func, 
                 Func<TIn, TOut, TRes> resultSelector)
             {
-                foreach (TIn subItem in subItems)
+                foreach (var subItem in subItems)
                 {
                     yield return CreateAggregator(static (func, subItem, resultSelector) =>
                     {
@@ -91,14 +89,12 @@ namespace DanilovSoft.AsyncEx
                             var result = task.Result;
                             return Task.FromResult(resultSelector(subItem, result));
                         }
-                        else
+                        
+                        return Wait(task, resultSelector, subItem);
+                        static async Task<TRes> Wait(Task<TOut> task, Func<TIn, TOut, TRes> resultSelector, TIn subItem)
                         {
-                            return WaitAsync(task, resultSelector, subItem);
-                            static async Task<TRes> WaitAsync(Task<TOut> task, Func<TIn, TOut, TRes> resultSelector, TIn subItem)
-                            {
-                                TOut result = await task.ConfigureAwait(false);
-                                return resultSelector(subItem, result);
-                            }
+                            var result = await task.ConfigureAwait(false);
+                            return resultSelector(subItem, result);
                         }
                     }, func, subItem, resultSelector);
                 }
@@ -109,17 +105,17 @@ namespace DanilovSoft.AsyncEx
                 Func<IParallelEnumerator<TIn>, IEnumerable<IAggregator<TInherim>>> aggregateFunc, 
                 Func<TIn, TInherim[], TRes> resultSelector)
             {
-                foreach (TIn subItem in subItems)
+                foreach (var subItem in subItems)
                 {
                     var en = new ParallelEnumerator<TIn>();
                     en.MoveNext(subItem);
 
-                    IAggregator<TInherim>[] aggs = aggregateFunc(en).ToArray();
+                    var aggs = aggregateFunc(en).ToArray();
 
                     yield return CreateAggregator(static async (subItem, aggs, resultSelector) =>
                     {
-                        TInherim[] outputs = new TInherim[aggs.Length];
-                        for (int i = 0; i < aggs.Length; i++)
+                        var outputs = new TInherim[aggs.Length];
+                        for (var i = 0; i < aggs.Length; i++)
                         {
                             var ag = aggs[i];
                             await ag.InvokeAsync().ConfigureAwait(false);
@@ -137,7 +133,7 @@ namespace DanilovSoft.AsyncEx
             int maxDegreeOfParallelism = -1)
         {
             var list = new List<TResult>();
-            IAsyncEnumerable<TResult> en = EnumerateAsync(items, func, resultSelector, maxDegreeOfParallelism);
+            var en = EnumerateAsync(items, func, resultSelector, maxDegreeOfParallelism);
 
             await foreach (var result in en.ConfigureAwait(false))
             {
@@ -177,7 +173,7 @@ namespace DanilovSoft.AsyncEx
             List<(TInput Input, IAggregator<TOutput>[] Agg)> itemsAgg = new();
 
             // Получим от пользователя все агрегаторы и инстанцируем замыкания.
-            foreach (TInput input in items)
+            foreach (var input in items)
             {
                 enumerator.MoveNext(input);
                 var funcs = func(enumerator);
@@ -193,10 +189,10 @@ namespace DanilovSoft.AsyncEx
                 CancellationToken = CancellationToken.None
             });
 
-            for (int i = 0; i < itemsAgg.Count; i++)
+            for (var i = 0; i < itemsAgg.Count; i++)
             {
                 var item = itemsAgg[i];
-                for (int j = 0; j < item.Agg.Length; j++)
+                for (var j = 0; j < item.Agg.Length; j++)
                 {
                     if (!await actionBlock.SendAsync(item.Agg[j]).ConfigureAwait(false))
                     // Произошла ошибка внутри конвейера.
@@ -209,13 +205,13 @@ namespace DanilovSoft.AsyncEx
             actionBlock.Complete();
             await actionBlock.Completion.ConfigureAwait(false);
 
-            for (int i = 0; i < itemsAgg.Count; i++)
+            for (var i = 0; i < itemsAgg.Count; i++)
             {
-                (TInput input, IAggregator<TOutput>[] agg) = itemsAgg[i];
+                (var input, var agg) = itemsAgg[i];
 
-                TOutput[] outputs = new TOutput[agg.Length];
+                var outputs = new TOutput[agg.Length];
 
-                for (int j = 0; j < agg.Length; j++)
+                for (var j = 0; j < agg.Length; j++)
                 {
                     outputs[j] = agg[j].InvokeResult;
                 }
@@ -310,7 +306,7 @@ namespace DanilovSoft.AsyncEx
                 return WaitAsync(task, input);
                 static async Task<(TInput, TOutput)> WaitAsync(Task<TOutput> task, TInput input)
                 {
-                    TOutput output = await task.ConfigureAwait(false);
+                    var output = await task.ConfigureAwait(false);
                     return (input, output);
                 }
             }

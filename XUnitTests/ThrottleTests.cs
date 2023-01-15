@@ -8,7 +8,7 @@ namespace XUnitTests
         [Fact]
         public void Throttle_Once_Success()
         {
-            int controlValue = -1;
+            var controlValue = -1;
 
             using (var throttle = new Throttle<int>(v => controlValue = v, 200))
             {
@@ -27,7 +27,7 @@ namespace XUnitTests
         [Fact]
         public void Throttle_Twice_Success()
         {
-            int controlValue = -1;
+            var controlValue = -1;
 
             using (var throttle = new Throttle<int>(v => controlValue = v, 200))
             {
@@ -51,7 +51,7 @@ namespace XUnitTests
         [Fact]
         public void Cancel_Success()
         {
-            int controlValue = -1;
+            var controlValue = -1;
 
             using (var throttle = new Throttle<int>(v => controlValue = v, 200))
             {
@@ -66,7 +66,7 @@ namespace XUnitTests
         [Fact]
         public void WaitDispose()
         {
-            int controlValue = -1;
+            var controlValue = -1;
 
             using (var throttle = new Throttle<int>(v => { Thread.Sleep(2000); controlValue = v; }, 100))
             {
@@ -80,7 +80,7 @@ namespace XUnitTests
         [Fact]
         public async Task WaitDisposeAsync()
         {
-            int controlValue = -1;
+            var controlValue = -1;
 
             await using (var throttle = new Throttle<int>(v => { Thread.Sleep(2000); controlValue = v; }, 100))
             {

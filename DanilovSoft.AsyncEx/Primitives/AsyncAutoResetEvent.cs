@@ -81,7 +81,7 @@ namespace DanilovSoft.AsyncEx
         [DebuggerStepThrough]
         public Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
-            long totalMilliseconds = (long)timeout.TotalMilliseconds;
+            var totalMilliseconds = (long)timeout.TotalMilliseconds;
             if (totalMilliseconds < -1 || totalMilliseconds > int.MaxValue)
             {
                 ThrowHelper.ThrowArgumentOutOfRange(nameof(timeout));

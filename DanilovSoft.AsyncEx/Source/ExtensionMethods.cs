@@ -31,11 +31,11 @@ namespace DanilovSoft.AsyncEx
 
         public static void Remove<T>(this Queue<T> queue, T item) where T : class
         {
-            int cycleAmount = queue.Count;
+            var cycleAmount = queue.Count;
 
-            for (int i = 0; i < cycleAmount; i++)
+            for (var i = 0; i < cycleAmount; i++)
             {
-                T pulledItem = queue.Dequeue();
+                var pulledItem = queue.Dequeue();
                 if (pulledItem != item)
                 {
                     queue.Enqueue(pulledItem);

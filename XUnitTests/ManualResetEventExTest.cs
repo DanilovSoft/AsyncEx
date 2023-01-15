@@ -26,7 +26,7 @@ namespace XUnitTests
             var a = new AsyncManualResetEvent2();
 
             var sw = Stopwatch.StartNew();
-            bool success = await a.WaitAsync(1000);
+            var success = await a.WaitAsync(1000);
             sw.Stop();
             Assert.InRange(sw.ElapsedMilliseconds, 1000, 10_000);
             Assert.False(success);
@@ -40,7 +40,7 @@ namespace XUnitTests
             _ = Task.Delay(500).ContinueWith(_ => a.Set());
 
             var sw = Stopwatch.StartNew();
-            bool success = await a.WaitAsync(1000);
+            var success = await a.WaitAsync(1000);
             sw.Stop();
             Assert.InRange(sw.ElapsedMilliseconds, 500, 2000);
             Assert.True(success);
@@ -96,7 +96,7 @@ namespace XUnitTests
             using var cts = new CancellationTokenSource(1000);
 
             var sw = Stopwatch.StartNew();
-            bool success = await a.WaitAsync(500, cts.Token);
+            var success = await a.WaitAsync(500, cts.Token);
             sw.Stop();
             Assert.InRange(sw.ElapsedMilliseconds, 500, 2000);
             Assert.False(success);

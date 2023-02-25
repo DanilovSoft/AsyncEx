@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,15 +7,13 @@ namespace DanilovSoft.AsyncEx;
 
 public sealed class Throttle<TState> : IDisposable, IAsyncDisposable
 {
-    private readonly object _invokeLock = new();
-    private readonly object _timerObj = new();
-    private Action<TState>? _callback;
+    private readonly object _scheduleLock = new();
+    private readonly object _callbackLock = new();
     /// <summary>
     /// Чтение и запись только внутри блокировки _invokeLock.
     /// </summary>
     [AllowNull] private TState _state;
     private Timer? _timer;
-    private volatile bool _disposed;
     private volatile bool _scheduled;
 
     /// <exception cref="ArgumentNullException"/>
@@ -25,61 +21,22 @@ public sealed class Throttle<TState> : IDisposable, IAsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        _callback = callback;
-        _timer = new Timer(OnTimer, null, -1, -1);
+        _timer = new Timer(OnTimer, callback, -1, -1);
     }
 
-    /// <param name="delay">Задержка срабатывания. Укажите TimeSpan.Zero что-бы выполнить колбэк немедленно.</param>
-    /// <exception cref="ArgumentOutOfRangeException"/>
-    /// <exception cref="ObjectDisposedException"/>
-    public void Invoke(TimeSpan delay, TState state) => Invoke((int)delay.TotalMilliseconds, state);
-
-    /// <param name="delayMsec">Задержка срабатывания в миллисекундах. Укажите ноль (0) что-бы выполнить колбэк немедленно.</param>
-    /// <exception cref="ArgumentOutOfRangeException"/>
-    /// <exception cref="ObjectDisposedException"/>
-    public void Invoke(int delayMsec, TState state)
-    {
-        if (delayMsec < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(delayMsec));
-        }
-        
-        lock (_invokeLock)
-        {
-            CheckDisposed();
-
-            _state = state;
-
-            if (!_scheduled)
-            {
-                _scheduled = true;
-                _timer.Change(delayMsec, Timeout.Infinite);
-            }
-        }
-    }
+    public bool IsScheduled => _scheduled;
 
     /// <summary>
     /// Блокирует поток для ожидания завершения колбэка.
     /// </summary>
     public void Dispose()
     {
-        var completed = DisposeCore();
+        var callbackCompleted = DisposeCore();
 
-        if (!completed)
+        if (!callbackCompleted)
         {
             // Гарантируем завершение колбэка.
-            var lockTaken = false;
-            try
-            {
-                Monitor.Enter(_timerObj, ref lockTaken);
-            }
-            finally
-            {
-                if (lockTaken)
-                {
-                    Monitor.Exit(_timerObj);
-                }
-            }
+            lock (_callbackLock) { }
         }
     }
 
@@ -89,9 +46,9 @@ public sealed class Throttle<TState> : IDisposable, IAsyncDisposable
     /// <returns></returns>
     public ValueTask DisposeAsync()
     {
-        var completed = DisposeCore();
+        var callbackCompleted = DisposeCore();
 
-        if (completed)
+        if (callbackCompleted)
         {
             return default;
         }
@@ -99,86 +56,98 @@ public sealed class Throttle<TState> : IDisposable, IAsyncDisposable
         return WaitForCallbackToCompleteAsync();
     }
 
+    /// <param name="delay">Задержка срабатывания. Укажите TimeSpan.Zero что-бы выполнить колбэк немедленно.</param>
+    /// <exception cref="ArgumentOutOfRangeException"/>
+    /// <exception cref="ObjectDisposedException"/>
+    public void Schedule(TimeSpan delay, TState state) => Schedule((int)delay.TotalMilliseconds, state);
+
+    /// <param name="delayMsec">Задержка срабатывания в миллисекундах. Укажите ноль (0) что-бы выполнить колбэк немедленно.</param>
+    /// <exception cref="ArgumentOutOfRangeException"/>
+    /// <exception cref="ObjectDisposedException"/>
+    public void Schedule(int delayMsec, TState state)
+    {
+        if (delayMsec < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(delayMsec));
+        }
+        
+        lock (_scheduleLock)
+        {
+            if (_timer is null)
+            {
+                ThrowHelper.ThrowObjectDisposed<Throttle<TState>>();
+            }
+
+            _state = state;
+
+            if (_scheduled)
+            {
+                return;
+            }
+
+            _scheduled = true;
+            _timer.Change(delayMsec, Timeout.Infinite);
+        }
+    }
+
     /// <returns>True если вызов колбэка гарантированно предотвращён.</returns>
     private bool DisposeCore()
     {
-        lock (_invokeLock)
+        lock (_scheduleLock)
         {
-            if (!_disposed)
-            {
-                _disposed = true;
-                _timer?.Dispose();
-                _timer = null;
-                _callback = null;
-
-                var lockTaken = false;
-                try
-                {
-                    Monitor.TryEnter(_timerObj, ref lockTaken);
-                    if (lockTaken)
-                    {
-                        _scheduled = false;
-                        return true;
-                    }
-                    else
-                    {
-                        // Таймер держит блокировку, значит выполняет колбэк.
-                        return false;
-                    }
-                }
-                finally
-                {
-                    if (lockTaken)
-                    {
-                        Monitor.Exit(_timerObj);
-                    }
-                }
-            }
-            else
+            if (_timer is null)
             {
                 return true;
+            }
+
+            _timer.Dispose();
+            _timer = null;
+
+            var lockTaken = false;
+            try
+            {
+                Monitor.TryEnter(_callbackLock, ref lockTaken);
+                if (lockTaken)
+                {
+                    _scheduled = false;
+                    return true;
+                }
+                else
+                {
+                    // Таймер держит блокировку, значит выполняет колбэк.
+                    return false;
+                }
+            }
+            finally
+            {
+                if (lockTaken)
+                {
+                    Monitor.Exit(_callbackLock);
+                }
             }
         }
     }
 
-    private void OnTimer(object? _)
+    private void OnTimer(object? timerState)
     {
         TState state;
-        Action<TState>? callback;
 
-        lock (_invokeLock)
+        lock (_scheduleLock)
         {
             state = _state;
-            callback = _callback;
             _state = default!;
         }
 
-        if (callback != null)
+        lock (_callbackLock)
         {
-            lock (_timerObj)
+            if (_scheduled)
             {
-                if (_scheduled)
-                {
-                    callback.Invoke(state);
-                }
+                ((Action<TState>)timerState!).Invoke(state);
             }
         }
 
         // Разрешить следующий запуск таймера.
         _scheduled = false;
-    }
-
-    [MemberNotNull(nameof(_timer))]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void CheckDisposed()
-    {
-        if (!_disposed)
-        {
-            Debug.Assert(_timer != null);
-            return;
-        }
-
-        ThrowHelper.ThrowObjectDisposed<Throttle<TState>>();
     }
 
     /// <summary>

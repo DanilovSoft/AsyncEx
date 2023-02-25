@@ -223,16 +223,6 @@
         <member name="M:DanilovSoft.AsyncEx.Throttle`1.#ctor(System.Action{`0})">
             <exception cref="T:System.ArgumentNullException"/>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.Throttle`1.Invoke(System.TimeSpan,`0)">
-            <param name="delay">Задержка срабатывания. Укажите TimeSpan.Zero что-бы выполнить колбэк немедленно.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <exception cref="T:System.ObjectDisposedException"/>
-        </member>
-        <member name="M:DanilovSoft.AsyncEx.Throttle`1.Invoke(System.Int32,`0)">
-            <param name="delayMsec">Задержка срабатывания в миллисекундах. Укажите ноль (0) что-бы выполнить колбэк немедленно.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <exception cref="T:System.ObjectDisposedException"/>
-        </member>
         <member name="M:DanilovSoft.AsyncEx.Throttle`1.Dispose">
             <summary>
             Блокирует поток для ожидания завершения колбэка.
@@ -243,6 +233,16 @@
             Использует поток из пула для ожидания завершения колбэка.
             </summary>
             <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.Throttle`1.Schedule(System.TimeSpan,`0)">
+            <param name="delay">Задержка срабатывания. Укажите TimeSpan.Zero что-бы выполнить колбэк немедленно.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.Throttle`1.Schedule(System.Int32,`0)">
+            <param name="delayMsec">Задержка срабатывания в миллисекундах. Укажите ноль (0) что-бы выполнить колбэк немедленно.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <exception cref="T:System.ObjectDisposedException"/>
         </member>
         <member name="M:DanilovSoft.AsyncEx.Throttle`1.DisposeCore">
             <returns>True если вызов колбэка гарантированно предотвращён.</returns>

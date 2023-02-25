@@ -11,12 +11,12 @@ public class ThrottleTests
 
         using (var throttle = new Throttle<int>(s => controlValue = s))
         {
-            throttle.Invoke(200, 1);
+            throttle.Schedule(200, 1);
             Thread.Sleep(100);
 
             Assert.Equal(-1, controlValue);
 
-            throttle.Invoke(200, 2);
+            throttle.Schedule(200, 2);
             Thread.Sleep(150);
 
             Assert.Equal(2, controlValue);
@@ -30,17 +30,17 @@ public class ThrottleTests
 
         using (var throttle = new Throttle<int>(s => controlValue = s))
         {
-            throttle.Invoke(200, 1);
+            throttle.Schedule(200, 1);
             Thread.Sleep(100);
 
             Assert.Equal(-1, controlValue);
 
-            throttle.Invoke(200, 2);
+            throttle.Schedule(200, 2);
             Thread.Sleep(150);
 
             Assert.Equal(2, controlValue);
 
-            throttle.Invoke(200, 3);
+            throttle.Schedule(200, 3);
             Thread.Sleep(300);
 
             Assert.Equal(3, controlValue);
@@ -54,7 +54,7 @@ public class ThrottleTests
 
         using (var throttle = new Throttle<int>(s => controlValue = s))
         {
-            throttle.Invoke(200, 1);
+            throttle.Schedule(200, 1);
             Thread.Sleep(100);
         }
 
@@ -70,7 +70,7 @@ public class ThrottleTests
 
         using (var throttle = new Throttle<int>(s => { Thread.Sleep(2000); controlValue = s; }))
         {
-            throttle.Invoke(100, 1);
+            throttle.Schedule(100, 1);
             Thread.Sleep(200);
         }
 
@@ -84,7 +84,7 @@ public class ThrottleTests
 
         await using (var throttle = new Throttle<int>(s => { Thread.Sleep(2000); controlValue = s; }))
         {
-            throttle.Invoke(100, 1);
+            throttle.Schedule(100, 1);
             Thread.Sleep(200);
         }
 

@@ -215,32 +215,49 @@
         <member name="M:DanilovSoft.AsyncEx.ManualResetEventSource`1.Wait">
             <exception cref="T:System.InvalidOperationException"/>
         </member>
-        <member name="F:DanilovSoft.AsyncEx.Throttle`1._arg">
+        <member name="F:DanilovSoft.AsyncEx.Throttle._state">
             <summary>
-            Чтение и запись только в блокировке _invokeObj.
+            Чтение и запись только внутри блокировки _invokeLock.
             </summary>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.Throttle`1.#ctor(System.Action{`0},System.Int64)">
-            <param name="delay">Задержка в миллисекундах.</param>
+        <member name="M:DanilovSoft.AsyncEx.Throttle.#ctor(System.Action{System.Object})">
+            <exception cref="T:System.ArgumentNullException"/>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.Throttle`1.Invoke(`0)">
+        <member name="M:DanilovSoft.AsyncEx.Throttle.Invoke(System.TimeSpan)">
+            <param name="delay">Задержка срабатывания. Укажите TimeSpan.Zero что-бы выполнить колбэк немедленно.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
             <exception cref="T:System.ObjectDisposedException"/>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.Throttle`1.Dispose">
+        <member name="M:DanilovSoft.AsyncEx.Throttle.Invoke(System.TimeSpan,System.Object)">
+            <param name="delay">Задержка срабатывания. Укажите TimeSpan.Zero что-бы выполнить колбэк немедленно.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.Throttle.Invoke(System.Int32)">
+            <param name="delayMsec">Задержка срабатывания в миллисекундах. Укажите ноль (0) что-бы выполнить колбэк немедленно.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.Throttle.Invoke(System.Int32,System.Object)">
+            <param name="delayMsec">Задержка срабатывания в миллисекундах. Укажите ноль (0) что-бы выполнить колбэк немедленно.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.AsyncEx.Throttle.Dispose">
             <summary>
             Блокирует поток для ожидания завершения колбэка.
             </summary>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.Throttle`1.DisposeAsync">
+        <member name="M:DanilovSoft.AsyncEx.Throttle.DisposeAsync">
             <summary>
             Использует поток из пула для ожидания завершения колбэка.
             </summary>
             <returns></returns>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.Throttle`1.DisposeCore">
+        <member name="M:DanilovSoft.AsyncEx.Throttle.DisposeCore">
             <returns>True если вызов колбэка гарантированно предотвращён.</returns>
         </member>
-        <member name="M:DanilovSoft.AsyncEx.Throttle`1.WaitForCallbackToCompleteAsync">
+        <member name="M:DanilovSoft.AsyncEx.Throttle.WaitForCallbackToCompleteAsync">
             <summary>
             Асинхронно ожидает однократное завершение колбэка.
             </summary>

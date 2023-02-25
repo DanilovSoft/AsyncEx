@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 using DanilovSoft.AsyncEx;
 
@@ -9,9 +8,7 @@ class Program
 {
     static async Task Main()
     {
-        var lazy = new AsyncLazy<int>(async _ => { return 1; });
+        var lazy = new AsyncLazy<int>(async (_, ct) => { return 1; });
         var v = await lazy.GetValueAsync();
-
-
     }
 }

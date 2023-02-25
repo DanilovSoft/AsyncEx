@@ -5,71 +5,136 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DanilovSoft.AsyncEx
+namespace DanilovSoft.AsyncEx;
+
+public sealed class Throttle : IDisposable, IAsyncDisposable
 {
-    public sealed class Throttle<T> : IDisposable, IAsyncDisposable
+    private readonly object _invokeLock = new();
+    private readonly object _timerObj = new();
+    private Action<object?>? _callback;
+    /// <summary>
+    /// Чтение и запись только внутри блокировки _invokeLock.
+    /// </summary>
+    private object? _state;
+    private Timer? _timer;
+    private volatile bool _disposed;
+    private volatile bool _scheduled;
+
+    /// <exception cref="ArgumentNullException"/>
+    public Throttle(Action<object?> callback)
     {
-        private readonly object _invokeObj = new();
-        private readonly object _timerObj = new();
-        private readonly long _delayMsec;
-        private Timer? _timer;
-        /// <summary>
-        /// Чтение и запись только в блокировке _invokeObj.
-        /// </summary>
-        [AllowNull] private T _arg;
-        private Action<T>? _callback;
-        private volatile bool _disposed;
-        private volatile bool _scheduled;
+        ArgumentNullException.ThrowIfNull(callback);
 
-        public Throttle(Action<T> callback, TimeSpan delay) : this(callback, (long)delay.TotalMilliseconds)
+        _callback = callback;
+        _timer = new Timer(OnTimer, null, -1, -1);
+    }
+
+    /// <param name="delay">Задержка срабатывания. Укажите TimeSpan.Zero что-бы выполнить колбэк немедленно.</param>
+    /// <exception cref="ArgumentOutOfRangeException"/>
+    /// <exception cref="ObjectDisposedException"/>
+    public void Invoke(TimeSpan delay) => Invoke((int)delay.TotalMilliseconds, null);
+
+    /// <param name="delay">Задержка срабатывания. Укажите TimeSpan.Zero что-бы выполнить колбэк немедленно.</param>
+    /// <exception cref="ArgumentOutOfRangeException"/>
+    /// <exception cref="ObjectDisposedException"/>
+    public void Invoke(TimeSpan delay, object? state) => Invoke((int)delay.TotalMilliseconds, state);
+
+    /// <param name="delayMsec">Задержка срабатывания в миллисекундах. Укажите ноль (0) что-бы выполнить колбэк немедленно.</param>
+    /// <exception cref="ArgumentOutOfRangeException"/>
+    /// <exception cref="ObjectDisposedException"/>
+    public void Invoke(int delayMsec) => Invoke(delayMsec, null);
+
+    /// <param name="delayMsec">Задержка срабатывания в миллисекундах. Укажите ноль (0) что-бы выполнить колбэк немедленно.</param>
+    /// <exception cref="ArgumentOutOfRangeException"/>
+    /// <exception cref="ObjectDisposedException"/>
+    public void Invoke(int delayMsec, object? state)
+    {
+        if (delayMsec < 0)
         {
+            throw new ArgumentOutOfRangeException(nameof(delayMsec));
         }
-
-        /// <param name="delay">Задержка в миллисекундах.</param>
-        public Throttle(Action<T> callback, long delay)
+        
+        lock (_invokeLock)
         {
-            _callback = callback ?? throw new ArgumentNullException(nameof(callback));
+            CheckDisposed();
 
-            if (delay < 0)
+            _state = state;
+
+            if (!_scheduled)
             {
-                throw new ArgumentOutOfRangeException(nameof(delay));
+                _scheduled = true;
+                _timer.Change(delayMsec, Timeout.Infinite);
             }
-
-            _delayMsec = delay;
-            _timer = new Timer(static s => ((Throttle<T>)s!).OnTimer(), this, -1, -1);
         }
+    }
 
-        /// <exception cref="ObjectDisposedException"/>
-        public void Invoke(T arg)
+    /// <summary>
+    /// Блокирует поток для ожидания завершения колбэка.
+    /// </summary>
+    public void Dispose()
+    {
+        var completed = DisposeCore();
+
+        if (!completed)
         {
-            lock (_invokeObj)
+            // Гарантируем завершение колбэка.
+            var lockTaken = false;
+            try
             {
-                CheckDisposed();
-
-                _arg = arg;
-
-                if (!_scheduled)
+                Monitor.Enter(_timerObj, ref lockTaken);
+            }
+            finally
+            {
+                if (lockTaken)
                 {
-                    _scheduled = true;
-                    _timer.Change(_delayMsec, Timeout.Infinite);
+                    Monitor.Exit(_timerObj);
                 }
             }
         }
+    }
 
-        /// <summary>
-        /// Блокирует поток для ожидания завершения колбэка.
-        /// </summary>
-        public void Dispose()
+    /// <summary>
+    /// Использует поток из пула для ожидания завершения колбэка.
+    /// </summary>
+    /// <returns></returns>
+    public ValueTask DisposeAsync()
+    {
+        var completed = DisposeCore();
+
+        if (completed)
         {
-            var completed = DisposeCore();
+            return default;
+        }
 
-            if (!completed)
+        return WaitForCallbackToCompleteAsync();
+    }
+
+    /// <returns>True если вызов колбэка гарантированно предотвращён.</returns>
+    private bool DisposeCore()
+    {
+        lock (_invokeLock)
+        {
+            if (!_disposed)
             {
-                // Гарантируем завершение колбэка.
+                _disposed = true;
+                _timer?.Dispose();
+                _timer = null;
+                _callback = null;
+
                 var lockTaken = false;
                 try
                 {
-                    Monitor.Enter(_timerObj, ref lockTaken);
+                    Monitor.TryEnter(_timerObj, ref lockTaken);
+                    if (lockTaken)
+                    {
+                        _scheduled = false;
+                        return true;
+                    }
+                    else
+                    {
+                        // Таймер держит блокировку, значит выполняет колбэк.
+                        return false;
+                    }
                 }
                 finally
                 {
@@ -79,125 +144,68 @@ namespace DanilovSoft.AsyncEx
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Использует поток из пула для ожидания завершения колбэка.
-        /// </summary>
-        /// <returns></returns>
-        public ValueTask DisposeAsync()
-        {
-            var completed = DisposeCore();
-
-            if (completed)
-            {
-                return default;
-            }
             else
             {
-                return WaitForCallbackToCompleteAsync();
+                return true;
             }
         }
+    }
 
-        /// <returns>True если вызов колбэка гарантированно предотвращён.</returns>
-        private bool DisposeCore()
+    private void OnTimer(object? _)
+    {
+        object? state;
+        Action<object?>? callback;
+
+        lock (_invokeLock)
         {
-            lock (_invokeObj)
-            {
-                if (!_disposed)
-                {
-                    _disposed = true;
-                    _timer?.Dispose();
-                    _timer = null;
-                    _callback = null;
+            state = _state;
+            callback = _callback;
+            _state = null;
+        }
 
-                    var lockTaken = false;
-                    try
-                    {
-                        Monitor.TryEnter(_timerObj, ref lockTaken);
-                        if (lockTaken)
-                        {
-                            _scheduled = false;
-                            return true;
-                        }
-                        else
-                        {
-                            // Таймер держит блокировку, значит выполняет колбэк.
-                            return false;
-                        }
-                    }
-                    finally
-                    {
-                        if (lockTaken)
-                        {
-                            Monitor.Exit(_timerObj);
-                        }
-                    }
-                }
-                else
+        if (callback != null)
+        {
+            lock (_timerObj)
+            {
+                if (_scheduled)
                 {
-                    return true;
+                    callback.Invoke(state);
                 }
             }
         }
 
-        private void OnTimer()
+        // Разрешить следующий запуск таймера.
+        _scheduled = false;
+    }
+
+    [MemberNotNull(nameof(_timer))]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void CheckDisposed()
+    {
+        if (!_disposed)
         {
-            T arg;
-            Action<T>? callback;
-            lock (_invokeObj)
-            {
-                arg = _arg;
-                callback = _callback;
-                _arg = default;
-            }
-
-            if (callback != null)
-            {
-                lock (_timerObj)
-                {
-                    if (_scheduled)
-                    {
-                        callback.Invoke(arg);
-                    }
-                }
-            }
-
-            // Разрешить следующий запуск таймера.
-            _scheduled = false;
+            Debug.Assert(_timer != null);
+            return;
         }
 
-        [MemberNotNull(nameof(_timer))]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CheckDisposed()
-        {
-            if (!_disposed)
-            {
-                Debug.Assert(_timer != null);
-            }
-            else
-            {
-                ThrowHelper.ThrowObjectDisposed<Throttle<T>>();
-            }
-        }
+        ThrowHelper.ThrowObjectDisposed<Throttle>();
+    }
 
-        /// <summary>
-        /// Асинхронно ожидает однократное завершение колбэка.
-        /// </summary>
-        private ValueTask WaitForCallbackToCompleteAsync()
+    /// <summary>
+    /// Асинхронно ожидает однократное завершение колбэка.
+    /// </summary>
+    private ValueTask WaitForCallbackToCompleteAsync()
+    {
+        // The specified callback is actually running: queue an async loop that'll poll for the currently executing
+        // callback to complete. While such polling isn't ideal, we expect this to be a rare case (disposing while
+        // the associated callback is running), and brief when it happens (so the polling will be minimal), and making
+        // this work with a callback mechanism will add additional cost to other more common cases.
+        return new ValueTask(Task.Factory.StartNew(async s =>
         {
-            // The specified callback is actually running: queue an async loop that'll poll for the currently executing
-            // callback to complete. While such polling isn't ideal, we expect this to be a rare case (disposing while
-            // the associated callback is running), and brief when it happens (so the polling will be minimal), and making
-            // this work with a callback mechanism will add additional cost to other more common cases.
-            return new ValueTask(Task.Factory.StartNew(static async s =>
+            while (_scheduled)
             {
-                var state = (Throttle<T>)s!;
-                while (state._scheduled)
-                {
-                    await Task.Yield();
-                }
-            }, this, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default).Unwrap());
-        }
+                await Task.Yield();
+            }
+        }, null, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default).Unwrap());
     }
 }

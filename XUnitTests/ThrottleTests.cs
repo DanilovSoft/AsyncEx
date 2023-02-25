@@ -1,94 +1,93 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
-namespace XUnitTests
+namespace XUnitTests;
+
+public class ThrottleTests
 {
-    public class ThrottleTests
+    [Fact]
+    public void Throttle_Once_Success()
     {
-        [Fact]
-        public void Throttle_Once_Success()
+        var controlValue = -1;
+
+        using (var throttle = new Throttle(s => controlValue = (int)s))
         {
-            var controlValue = -1;
-
-            using (var throttle = new Throttle<int>(v => controlValue = v, 200))
-            {
-                throttle.Invoke(1);
-                Thread.Sleep(100);
-
-                Assert.Equal(-1, controlValue);
-
-                throttle.Invoke(2);
-                Thread.Sleep(150);
-
-                Assert.Equal(2, controlValue);
-            }
-        }
-
-        [Fact]
-        public void Throttle_Twice_Success()
-        {
-            var controlValue = -1;
-
-            using (var throttle = new Throttle<int>(v => controlValue = v, 200))
-            {
-                throttle.Invoke(1);
-                Thread.Sleep(100);
-
-                Assert.Equal(-1, controlValue);
-
-                throttle.Invoke(2);
-                Thread.Sleep(150);
-
-                Assert.Equal(2, controlValue);
-
-                throttle.Invoke(3);
-                Thread.Sleep(300);
-
-                Assert.Equal(3, controlValue);
-            }
-        }
-
-        [Fact]
-        public void Cancel_Success()
-        {
-            var controlValue = -1;
-
-            using (var throttle = new Throttle<int>(v => controlValue = v, 200))
-            {
-                throttle.Invoke(1);
-                Thread.Sleep(100);
-            }
-            Thread.Sleep(200);
+            throttle.Invoke(200, 1);
+            Thread.Sleep(100);
 
             Assert.Equal(-1, controlValue);
-        }
 
-        [Fact]
-        public void WaitDispose()
+            throttle.Invoke(200, 2);
+            Thread.Sleep(150);
+
+            Assert.Equal(2, controlValue);
+        }
+    }
+
+    [Fact]
+    public void Throttle_Twice_Success()
+    {
+        var controlValue = -1;
+
+        using (var throttle = new Throttle(s => controlValue = (int)s))
         {
-            var controlValue = -1;
+            throttle.Invoke(200, 1);
+            Thread.Sleep(100);
 
-            using (var throttle = new Throttle<int>(v => { Thread.Sleep(2000); controlValue = v; }, 100))
-            {
-                throttle.Invoke(1);
-                Thread.Sleep(200);
-            }
+            Assert.Equal(-1, controlValue);
 
-            Assert.Equal(1, controlValue);
+            throttle.Invoke(200, 2);
+            Thread.Sleep(150);
+
+            Assert.Equal(2, controlValue);
+
+            throttle.Invoke(200, 3);
+            Thread.Sleep(300);
+
+            Assert.Equal(3, controlValue);
         }
+    }
 
-        [Fact]
-        public async Task WaitDisposeAsync()
+    [Fact]
+    public void Cancel_Success()
+    {
+        var controlValue = -1;
+
+        using (var throttle = new Throttle(s => controlValue = (int)s))
         {
-            var controlValue = -1;
-
-            await using (var throttle = new Throttle<int>(v => { Thread.Sleep(2000); controlValue = v; }, 100))
-            {
-                throttle.Invoke(1);
-                Thread.Sleep(200);
-            }
-
-            Assert.Equal(1, controlValue);
+            throttle.Invoke(200, 1);
+            Thread.Sleep(100);
         }
+
+        Thread.Sleep(200);
+
+        Assert.Equal(-1, controlValue);
+    }
+
+    [Fact]
+    public void WaitDispose()
+    {
+        var controlValue = -1;
+
+        using (var throttle = new Throttle(s => { Thread.Sleep(2000); controlValue = (int)s; }))
+        {
+            throttle.Invoke(100, 1);
+            Thread.Sleep(200);
+        }
+
+        Assert.Equal(1, controlValue);
+    }
+
+    [Fact]
+    public async Task WaitDisposeAsync()
+    {
+        var controlValue = -1;
+
+        await using (var throttle = new Throttle(s => { Thread.Sleep(2000); controlValue = (int)s; }))
+        {
+            throttle.Invoke(100, 1);
+            Thread.Sleep(200);
+        }
+
+        Assert.Equal(1, controlValue);
     }
 }

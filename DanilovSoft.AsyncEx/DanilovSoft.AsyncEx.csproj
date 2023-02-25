@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net7.0;net6.0</TargetFrameworks>
 		<AnalysisMode>AllEnabledByDefault</AnalysisMode>
 		<Nullable>enable</Nullable>
 		<AssemblyName>DanilovSoft.AsyncEx</AssemblyName>
@@ -11,7 +11,7 @@
 		<DocumentationFile>DanilovSoft.AsyncEx.xml</DocumentationFile>
 		<Description>Synchronous and asynchronous primitives and coordinations.</Description>
 		<PackageTags>async;task;lazyasync;asynclock</PackageTags>
-		<Version>1.12.0</Version>
+		<Version>1.13.0</Version>
 		<InvariantGlobalization>true</InvariantGlobalization>
 		<PublicSign>false</PublicSign>
 	</PropertyGroup>

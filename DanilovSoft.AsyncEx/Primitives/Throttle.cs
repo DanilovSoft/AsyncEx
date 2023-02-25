@@ -7,21 +7,21 @@ using System.Threading.Tasks;
 
 namespace DanilovSoft.AsyncEx;
 
-public sealed class Throttle : IDisposable, IAsyncDisposable
+public sealed class Throttle<TState> : IDisposable, IAsyncDisposable
 {
     private readonly object _invokeLock = new();
     private readonly object _timerObj = new();
-    private Action<object?>? _callback;
+    private Action<TState>? _callback;
     /// <summary>
     /// Чтение и запись только внутри блокировки _invokeLock.
     /// </summary>
-    private object? _state;
+    [AllowNull] private TState _state;
     private Timer? _timer;
     private volatile bool _disposed;
     private volatile bool _scheduled;
 
     /// <exception cref="ArgumentNullException"/>
-    public Throttle(Action<object?> callback)
+    public Throttle(Action<TState> callback)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
@@ -32,22 +32,12 @@ public sealed class Throttle : IDisposable, IAsyncDisposable
     /// <param name="delay">Задержка срабатывания. Укажите TimeSpan.Zero что-бы выполнить колбэк немедленно.</param>
     /// <exception cref="ArgumentOutOfRangeException"/>
     /// <exception cref="ObjectDisposedException"/>
-    public void Invoke(TimeSpan delay) => Invoke((int)delay.TotalMilliseconds, null);
-
-    /// <param name="delay">Задержка срабатывания. Укажите TimeSpan.Zero что-бы выполнить колбэк немедленно.</param>
-    /// <exception cref="ArgumentOutOfRangeException"/>
-    /// <exception cref="ObjectDisposedException"/>
-    public void Invoke(TimeSpan delay, object? state) => Invoke((int)delay.TotalMilliseconds, state);
+    public void Invoke(TimeSpan delay, TState state) => Invoke((int)delay.TotalMilliseconds, state);
 
     /// <param name="delayMsec">Задержка срабатывания в миллисекундах. Укажите ноль (0) что-бы выполнить колбэк немедленно.</param>
     /// <exception cref="ArgumentOutOfRangeException"/>
     /// <exception cref="ObjectDisposedException"/>
-    public void Invoke(int delayMsec) => Invoke(delayMsec, null);
-
-    /// <param name="delayMsec">Задержка срабатывания в миллисекундах. Укажите ноль (0) что-бы выполнить колбэк немедленно.</param>
-    /// <exception cref="ArgumentOutOfRangeException"/>
-    /// <exception cref="ObjectDisposedException"/>
-    public void Invoke(int delayMsec, object? state)
+    public void Invoke(int delayMsec, TState state)
     {
         if (delayMsec < 0)
         {
@@ -153,14 +143,14 @@ public sealed class Throttle : IDisposable, IAsyncDisposable
 
     private void OnTimer(object? _)
     {
-        object? state;
-        Action<object?>? callback;
+        TState state;
+        Action<TState>? callback;
 
         lock (_invokeLock)
         {
             state = _state;
             callback = _callback;
-            _state = null;
+            _state = default!;
         }
 
         if (callback != null)
@@ -188,7 +178,7 @@ public sealed class Throttle : IDisposable, IAsyncDisposable
             return;
         }
 
-        ThrowHelper.ThrowObjectDisposed<Throttle>();
+        ThrowHelper.ThrowObjectDisposed<Throttle<TState>>();
     }
 
     /// <summary>

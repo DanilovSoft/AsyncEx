@@ -9,7 +9,7 @@ public class ThrottleTests
     {
         var controlValue = -1;
 
-        using (var throttle = new Throttle(s => controlValue = (int)s))
+        using (var throttle = new Throttle<int>(s => controlValue = s))
         {
             throttle.Invoke(200, 1);
             Thread.Sleep(100);
@@ -28,7 +28,7 @@ public class ThrottleTests
     {
         var controlValue = -1;
 
-        using (var throttle = new Throttle(s => controlValue = (int)s))
+        using (var throttle = new Throttle<int>(s => controlValue = s))
         {
             throttle.Invoke(200, 1);
             Thread.Sleep(100);
@@ -52,7 +52,7 @@ public class ThrottleTests
     {
         var controlValue = -1;
 
-        using (var throttle = new Throttle(s => controlValue = (int)s))
+        using (var throttle = new Throttle<int>(s => controlValue = s))
         {
             throttle.Invoke(200, 1);
             Thread.Sleep(100);
@@ -68,7 +68,7 @@ public class ThrottleTests
     {
         var controlValue = -1;
 
-        using (var throttle = new Throttle(s => { Thread.Sleep(2000); controlValue = (int)s; }))
+        using (var throttle = new Throttle<int>(s => { Thread.Sleep(2000); controlValue = s; }))
         {
             throttle.Invoke(100, 1);
             Thread.Sleep(200);
@@ -82,7 +82,7 @@ public class ThrottleTests
     {
         var controlValue = -1;
 
-        await using (var throttle = new Throttle(s => { Thread.Sleep(2000); controlValue = (int)s; }))
+        await using (var throttle = new Throttle<int>(s => { Thread.Sleep(2000); controlValue = s; }))
         {
             throttle.Invoke(100, 1);
             Thread.Sleep(200);

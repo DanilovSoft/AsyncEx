@@ -11,3 +11,6 @@ dotnet_diagnostic.CA1031.severity = none
 
 # CA1849: Call async methods when in an async method
 dotnet_diagnostic.CA1849.severity = silent
+
+# IDE0034: ”простить выражение default
+csharp_prefer_simple_default_expression = false

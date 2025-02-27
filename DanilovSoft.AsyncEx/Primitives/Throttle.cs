@@ -9,6 +9,8 @@ public sealed class Throttle<TState> : IDisposable, IAsyncDisposable
 {
     private readonly object _scheduleLock = new();
     private readonly object _callbackLock = new();
+    private readonly Action<TState> _callback;
+
     /// <summary>
     /// Чтение и запись только внутри блокировки _invokeLock.
     /// </summary>
@@ -21,7 +23,8 @@ public sealed class Throttle<TState> : IDisposable, IAsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        _timer = new Timer(OnTimer, callback, -1, -1);
+        _callback = callback;
+        _timer = new Timer(static s => ((Throttle<TState>)s!).OnTimer(), this, -1, -1);
     }
 
     public bool IsScheduled => _scheduled;
@@ -128,7 +131,7 @@ public sealed class Throttle<TState> : IDisposable, IAsyncDisposable
         }
     }
 
-    private void OnTimer(object? timerState)
+    private void OnTimer()
     {
         TState state;
 
@@ -142,12 +145,11 @@ public sealed class Throttle<TState> : IDisposable, IAsyncDisposable
         {
             if (_scheduled)
             {
-                ((Action<TState>)timerState!).Invoke(state);
+                _callback.Invoke(state);
             }
         }
 
-        // Разрешить следующий запуск таймера.
-        _scheduled = false;
+        _scheduled = false; // allow next fire by timer.
     }
 
     /// <summary>
